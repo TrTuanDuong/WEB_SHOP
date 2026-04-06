@@ -19,11 +19,11 @@ public class ClothingBackServlet extends HttpServlet {
         session.setAttribute("enteredColor", session.getAttribute("draftColor"));
         session.setAttribute("enteredPrice", session.getAttribute("draftPrice"));
         session.setAttribute("enteredStockQuantity", session.getAttribute("draftStockQuantity"));
-        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        response.sendRedirect(request.getContextPath() + "/addproducts");
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        response.sendRedirect(request.getContextPath() + "/addproducts");
     }
 }

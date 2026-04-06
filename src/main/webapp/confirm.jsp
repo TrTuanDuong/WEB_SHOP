@@ -12,9 +12,10 @@
 
     if (productCode == null || name == null || category == null || size == null
             || color == null || price == null || stockQuantity == null) {
-        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        response.sendRedirect(request.getContextPath() + "/addproducts");
         return;
     }
+    
 %>
 <!DOCTYPE html>
 <html>

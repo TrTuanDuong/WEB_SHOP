@@ -98,7 +98,7 @@ public class ClothingPreviewServlet extends HttpServlet {
         }
 
         if (hasError) {
-            request.getRequestDispatcher("/index.jsp").forward(request, response);
+            request.getRequestDispatcher("/addproducts").forward(request, response);
             return;
         }
 
@@ -115,7 +115,7 @@ public class ClothingPreviewServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        response.sendRedirect(request.getContextPath() + "/addproducts");
     }
 
     private String normalize(String value) {

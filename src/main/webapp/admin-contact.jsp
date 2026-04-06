@@ -1,5 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.btl_web.UserStore" %>
+<%@ page import="java.util.List" %>
+<%@ page import="com.btl_web.AdminContactServlet" %>
 <%
     UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
     if (currentUser == null) {
@@ -7,17 +9,26 @@
         return;
     }
 
+    boolean adminView = "admin".equals(currentUser.getUsername());
+
     String contactError = (String) session.getAttribute("contactError");
     String contactSuccess = (String) session.getAttribute("contactSuccess");
     session.removeAttribute("contactError");
     session.removeAttribute("contactSuccess");
+
+    @SuppressWarnings("unchecked")
+    List<AdminContactServlet.ContactRequest> adminRequests =
+            (List<AdminContactServlet.ContactRequest>) request.getAttribute("adminRequests");
+    if (adminRequests == null) {
+        adminRequests = java.util.Collections.emptyList();
+    }
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liên hệ admin</title>
+    <title><%= adminView ? "Yêu cầu người dùng" : "Liên hệ admin" %></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
@@ -78,11 +89,30 @@
         .msg { margin-bottom: 10px; padding: 9px; border-radius: 8px; font-size: 0.9rem; }
         .err { background: #fff3f2; color: #b42318; border: 1px solid #f0c6c1; }
         .ok { background: #ecfaf6; color: #0d5f57; border: 1px solid #b7e1d8; }
+        .request-list { display: grid; gap: 10px; }
+        .request-item {
+            border: 1px solid #dbe4de;
+            border-radius: 12px;
+            background: #fff;
+            padding: 12px;
+        }
+        .request-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+            font-size: 0.84rem;
+            color: #5f7270;
+        }
+        .request-topic { font-weight: 700; margin: 0 0 6px; }
+        .request-content { margin: 0; color: #2a3d3b; white-space: pre-wrap; }
+        .empty { padding: 12px; border: 1px dashed #d4dfd9; border-radius: 10px; color: #5f7270; }
     </style>
 </head>
 <body>
 <div class="topbar">
-    <div class="logo">Linen Lab | Liên hệ admin</div>
+    <div class="logo">Linen Lab | <%= adminView ? "Yêu cầu" : "Liên hệ admin" %></div>
     <div class="links">
         <a class="link-btn" href="<%= request.getContextPath() %>/profile">Trang cá nhân</a>
         <a class="link-btn" href="<%= request.getContextPath() %>/shop">Về shop</a>
@@ -90,29 +120,51 @@
 </div>
 
 <div class="card">
-    <h1>Liên hệ admin</h1>
-    <p>Chọn yêu cầu cần hỗ trợ, hệ thống sẽ ghi nhận để admin xử lý sau.</p>
+    <% if (adminView) { %>
+        <h1>Yêu cầu người dùng</h1>
+        <p>Trang này chỉ hiển thị các yêu cầu đã gửi từ người dùng.</p>
 
-    <% if (contactError != null) { %><div class="msg err"><%= contactError %></div><% } %>
-    <% if (contactSuccess != null) { %><div class="msg ok"><%= contactSuccess %></div><% } %>
+        <% if (adminRequests.isEmpty()) { %>
+            <div class="empty">Chưa có yêu cầu nào từ người dùng.</div>
+        <% } else { %>
+            <div class="request-list">
+                <% for (AdminContactServlet.ContactRequest item : adminRequests) { %>
+                    <article class="request-item">
+                        <div class="request-meta">
+                            <span><strong><%= item.getFullName() %></strong> (@<%= item.getUsername() %>)</span>
+                            <span><%= item.getCreatedAt() %></span>
+                        </div>
+                        <p class="request-topic"><%= item.getTopic() %></p>
+                        <p class="request-content"><%= item.getContent() %></p>
+                    </article>
+                <% } %>
+            </div>
+        <% } %>
+    <% } else { %>
+        <h1>Liên hệ admin</h1>
+        <p>Chọn yêu cầu cần hỗ trợ, hệ thống sẽ ghi nhận để admin xử lý sau.</p>
 
-    <form action="<%= request.getContextPath() %>/admin-contact/send" method="post">
-        <div class="field">
-            <label for="topic">Yêu cầu</label>
-            <select id="topic" name="topic">
-                <option value="">Chọn một yêu cầu</option>
-                <option value="Sửa thông tin cá nhân cố định">Sửa thông tin cá nhân cố định</option>
-                <option value="Sửa địa chỉ giao hàng">Sửa địa chỉ giao hàng</option>
-                <option value="Hỗ trợ đơn hàng">Hỗ trợ đơn hàng</option>
-                <option value="Khác">Khác</option>
-            </select>
-        </div>
-        <div class="field">
-            <label for="content">Nội dung</label>
-            <textarea id="content" name="content" placeholder="Mô tả chi tiết vấn đề hoặc yêu cầu của bạn"></textarea>
-        </div>
-        <button class="btn" type="submit">Gửi yêu cầu</button>
-    </form>
+        <% if (contactError != null) { %><div class="msg err"><%= contactError %></div><% } %>
+        <% if (contactSuccess != null) { %><div class="msg ok"><%= contactSuccess %></div><% } %>
+
+        <form action="<%= request.getContextPath() %>/admin-contact/send" method="post">
+            <div class="field">
+                <label for="topic">Yêu cầu</label>
+                <select id="topic" name="topic">
+                    <option value="">Chọn một yêu cầu</option>
+                    <option value="Sửa thông tin cá nhân cố định">Sửa thông tin cá nhân cố định</option>
+                    <option value="Sửa địa chỉ giao hàng">Sửa địa chỉ giao hàng</option>
+                    <option value="Hỗ trợ đơn hàng">Hỗ trợ đơn hàng</option>
+                    <option value="Khác">Khác</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="content">Nội dung</label>
+                <textarea id="content" name="content" placeholder="Mô tả chi tiết vấn đề hoặc yêu cầu của bạn"></textarea>
+            </div>
+            <button class="btn" type="submit">Gửi yêu cầu</button>
+        </form>
+    <% } %>
 </div>
 </body>
 </html>

@@ -209,6 +209,7 @@ public final class UserStore {
             Object value = context.getAttribute(USERS_KEY);
             if (value == null) {
                 Map<String, User> users = new HashMap<>();
+                users.put("admin", new User("admin", "Quản trị viên", "admin123"));
                 users.put("demo", new User("demo", "Khách Demo", "123456"));
                 context.setAttribute(USERS_KEY, users);
                 return users;

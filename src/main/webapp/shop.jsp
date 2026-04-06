@@ -387,10 +387,17 @@
             <a class="link-btn primary" href="<%= request.getContextPath() %>/auth/register">Đăng ký</a>
         <% } else { %>
             <span class="badge">Xin chào, <%= currentUser.getFullName() %></span>
+            <% if ("admin".equals(currentUser.getUsername())) { %>
+                <a class="link-btn primary" href="<%= request.getContextPath() %>/addproducts">Thêm sản phẩm</a>
+            <% } %>
             <a class="link-btn" href="<%= request.getContextPath() %>/profile">Trang cá nhân</a>
             <a class="link-btn" href="<%= request.getContextPath() %>/cart">Giỏ hàng(<%= cartCount %>)</a>
             <a class="link-btn" href="<%= request.getContextPath() %>/orders">Đơn hàng</a>
-            <a class="link-btn" href="<%= request.getContextPath() %>/admin-contact">Liên hệ admin</a>
+            <% if ("admin".equals(currentUser.getUsername())) { %>
+                <a class="link-btn" href="<%= request.getContextPath() %>/admin-contact">Yêu cầu</a>
+            <% } else { %>
+                <a class="link-btn" href="<%= request.getContextPath() %>/admin-contact">Liên hệ admin</a>
+            <% } %>
             <a class="link-btn logout" href="<%= request.getContextPath() %>/auth/logout">Đăng xuất</a>
         <% } %>
     </div>

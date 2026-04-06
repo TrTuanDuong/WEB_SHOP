@@ -1,6 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%
     String authError = (String) request.getAttribute("authError");
+    if (authError == null && session.getAttribute("authError") != null) {
+        authError = (String) session.getAttribute("authError");
+        session.removeAttribute("authError");
+    }
     String enteredUsername = (String) request.getAttribute("enteredUsername");
     if (enteredUsername == null) enteredUsername = "";
     String authSuccess = (String) session.getAttribute("authSuccess");
@@ -67,6 +71,7 @@
 <div class="box">
     <h1>Đăng nhập mua hàng</h1>
     <p>Tài khoản demo: <strong>demo</strong> | Mật khẩu: <strong>123456</strong></p>
+    <p>Tài khoản admin: <strong>admin</strong> | Mật khẩu: <strong>admin123</strong></p>
 
     <% if (authError != null) { %><div class="msg err"><%= authError %></div><% } %>
     <% if (authSuccess != null) { %><div class="msg ok"><%= authSuccess %></div><% } %>

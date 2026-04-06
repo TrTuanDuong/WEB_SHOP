@@ -28,7 +28,7 @@ public class ClothingConfirmServlet extends HttpServlet {
         if (isBlank(productCode) || isBlank(name) || isBlank(category) || isBlank(size)
                 || isBlank(color) || isBlank(priceText) || isBlank(stockText)) {
             session.setAttribute("formError", "Phiên nhập liệu không hợp lệ, vui lòng nhập lại.");
-            response.sendRedirect(request.getContextPath() + "/index.jsp");
+            response.sendRedirect(request.getContextPath() + "/addproducts");
             return;
         }
 
@@ -39,7 +39,7 @@ public class ClothingConfirmServlet extends HttpServlet {
             stockQuantity = Integer.parseInt(stockText);
         } catch (NumberFormatException ex) {
             session.setAttribute("formError", "Dữ liệu giá hoặc số lượng không hợp lệ, vui lòng nhập lại.");
-            response.sendRedirect(request.getContextPath() + "/index.jsp");
+            response.sendRedirect(request.getContextPath() + "/addproducts");
             return;
         }
 
@@ -52,7 +52,7 @@ public class ClothingConfirmServlet extends HttpServlet {
             session.setAttribute("enteredColor", color);
             session.setAttribute("enteredPrice", priceText);
             session.setAttribute("enteredStockQuantity", stockText);
-            response.sendRedirect(request.getContextPath() + "/index.jsp");
+            response.sendRedirect(request.getContextPath() + "/addproducts");
             return;
         }
 
@@ -61,12 +61,12 @@ public class ClothingConfirmServlet extends HttpServlet {
         session.setAttribute("lastCategory", category);
         session.setAttribute("successMessage", "Đã thêm sản phẩm quần áo thành công.");
         clearDraft(session);
-        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        response.sendRedirect(request.getContextPath() + "/addproducts");
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        response.sendRedirect(request.getContextPath() + "/addproducts");
     }
 
     private void clearDraft(HttpSession session) {

@@ -1,7 +1,15 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.btl_web.ClothingStore" %>
+<%@ page import="com.btl_web.UserStore" %>
 <%
+    UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+    if (currentUser == null || !"admin".equals(currentUser.getUsername())) {
+        session.setAttribute("authError", "Chỉ tài khoản admin mới được truy cập trang quản trị sản phẩm.");
+        response.sendRedirect(request.getContextPath() + "/auth/login");
+        return;
+    }
+
     String enteredProductCode = (String) request.getAttribute("enteredProductCode");
     String enteredName = (String) request.getAttribute("enteredName");
     String enteredCategory = (String) request.getAttribute("enteredCategory");
@@ -76,7 +84,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linen Lab | Quản lý sản phẩm</title>
+    <title>Linen Lab | Thêm sản phẩm</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -422,9 +430,9 @@
 <body>
 <div class="container">
     <section class="hero">
-        <span class="eyebrow">Linen Lab</span>
-        <h1>Quản lý sản phẩm quần áo gọn gàng và trực quan</h1>
-        <p>Nhập nhanh sản phẩm mới, kiểm tra hợp lệ tức thì và theo dõi danh sách hàng hóa trong cùng một màn hình.</p>
+        <span class="eyebrow">Trang quản trị</span>
+        <h1>Thêm sản phẩm quần áo</h1>
+        <p>Nhập nhanh sản phẩm mới, kiểm tra hợp lệ tức thì và theo dõi danh sách đã thêm ngay trong cùng một màn hình.</p>
         <a class="hero-link" href="<%= request.getContextPath() %>/shop">Mở trang mua hàng cho khách</a>
     </section>
 
@@ -439,7 +447,7 @@
     <section class="layout">
         <article class="card">
             <div class="card-header">
-                <h2 class="card-title">Thêm sản phẩm mới</h2>
+                <h2 class="card-title">Thông tin sản phẩm mới</h2>
                 <p class="card-sub">Kiểm tra dữ liệu trước khi qua bước xác nhận.</p>
             </div>
 

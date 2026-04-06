@@ -19,5 +19,43 @@ Ung dung duoc xay dung bang Java Servlet + JSP voi luong 2 buoc:
 mvn clean package
 ```
 
+### Yeu cau
+
+- JDK 21
+- Maven 3.9+
+- Tomcat 9 (vi du: `apache-tomcat-9.x`)
+
+### Build WAR
+
+```bash
+mvn clean package
+```
+
+Sau khi build thanh cong se tao file:
+
+```bash
+target/BTL_WEB.war
+```
+
+### Chay local bang Tomcat
+
+```bash
+cp target/BTL_WEB.war /duong-dan-toi-tomcat/webapps/
+/duong-dan-toi-tomcat/bin/startup.sh
+```
+
+Mo trinh duyet:
+
+```text
+http://localhost:8080/BTL_WEB
+```
+
+Dung server:
+
+```bash
+/duong-dan-toi-tomcat/bin/shutdown.sh
+```
+
 Deploy file WAR trong thu muc `target/` len server Servlet (Tomcat, Jetty, ...).
+
 # WEB_SHOP
