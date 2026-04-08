@@ -92,9 +92,16 @@ public class ClothingPreviewServlet extends HttpServlet {
             }
         }
 
-        if (!isBlank(productCode) && ClothingStore.exists(getServletContext(), productCode)) {
-            request.setAttribute("errorProductCode", "Mã sản phẩm đã tồn tại.");
-            hasError = true;
+        if (!isBlank(productCode)) {
+            try {
+                if (ClothingStore.exists(productCode)) {
+                    request.setAttribute("errorProductCode", "Mã sản phẩm đã tồn tại.");
+                    hasError = true;
+                }
+            } catch (IllegalStateException ex) {
+                request.setAttribute("formError", "Không thể kết nối CSDL. Kiểm tra DB_URL/DB_USER/DB_PASSWORD.");
+                hasError = true;
+            }
         }
 
         if (hasError) {

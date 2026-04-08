@@ -2,84 +2,105 @@ package com.btl_web;
 
 import javax.servlet.ServletContext;
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 public final class ShopCatalog {
-    private static final String PRODUCTS_KEY = "shopCatalogProducts";
+    private static final String DB_URL = System.getenv().getOrDefault("DB_URL",
+            "jdbc:postgresql://localhost:5432/btl_web");
+    private static final String DB_USER = System.getenv().getOrDefault("DB_USER", "postgres");
+    private static final String DB_PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "postgres");
+    private static volatile boolean schemaInitialized = false;
 
     private ShopCatalog() {
     }
 
     public static List<Product> all(ServletContext context) {
-        return Collections.unmodifiableList(getOrInit(context));
+        initSchemaIfNeeded();
+        String sql = "SELECT id, name, group_name, segment, size, color, price "
+                + "FROM shop_product ORDER BY id";
+        List<Product> products = new ArrayList<>();
+        try (Connection connection = getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                products.add(new Product(
+                        resultSet.getString("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("group_name"),
+                        resultSet.getString("segment"),
+                        resultSet.getString("size"),
+                        resultSet.getString("color"),
+                        resultSet.getBigDecimal("price")));
+            }
+            return Collections.unmodifiableList(products);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải danh mục sản phẩm từ CSDL.", e);
+        }
     }
 
     public static Product findById(ServletContext context, String id) {
-        for (Product product : getOrInit(context)) {
-            if (product.getId().equals(id)) {
-                return product;
+        initSchemaIfNeeded();
+        String sql = "SELECT id, name, group_name, segment, size, color, price "
+                + "FROM shop_product WHERE id = ?";
+        try (Connection connection = getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return null;
+                }
+                return new Product(
+                        resultSet.getString("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("group_name"),
+                        resultSet.getString("segment"),
+                        resultSet.getString("size"),
+                        resultSet.getString("color"),
+                        resultSet.getBigDecimal("price"));
             }
-        }
-        return null;
-    }
-
-    private static List<Product> getOrInit(ServletContext context) {
-        synchronized (context) {
-            @SuppressWarnings("unchecked")
-            List<Product> products = (List<Product>) context.getAttribute(PRODUCTS_KEY);
-            if (products == null) {
-                products = seedProducts();
-                context.setAttribute(PRODUCTS_KEY, products);
-            }
-            return products;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tìm sản phẩm theo mã từ CSDL.", e);
         }
     }
 
-    private static List<Product> seedProducts() {
-        List<Product> products = new ArrayList<>();
-        String[] adultMaleNames = { "Áo thun nam", "Áo sơ mi nam", "Quần jean nam", "Quần kaki nam", "Áo polo nam",
-                "Áo khoác nam" };
-        String[] adultFemaleNames = { "Áo thun nữ", "Áo kiểu nữ", "Váy nữ", "Quần jean nữ", "Áo khoác nữ", "Chân váy" };
-        String[] kidBoyNames = { "Áo thun bé trai", "Quần short bé trai", "Áo sơ mi bé trai", "Set đồ bé trai",
-                "Quần jean bé trai", "Áo khoác bé trai" };
-        String[] kidGirlNames = { "Váy bé gái", "Áo kiểu bé gái", "Set đồ bé gái", "Quần legging bé gái",
-                "Áo khoác bé gái", "Áo thun bé gái" };
-
-        int counter = 1;
-        counter = addGroup(products, counter, "AD-M", "Người lớn", "Nam", adultMaleNames, 18);
-        counter = addGroup(products, counter, "AD-F", "Người lớn", "Nữ", adultFemaleNames, 18);
-        counter = addGroup(products, counter, "KD-B", "Trẻ em", "Bé trai", kidBoyNames, 18);
-        addGroup(products, counter, "KD-G", "Trẻ em", "Bé gái", kidGirlNames, 18);
-
-        return products;
-    }
-
-    private static int addGroup(
-            List<Product> products,
-            int startIndex,
-            String codePrefix,
-            String group,
-            String segment,
-            String[] names,
-            int count) {
-        String[] colors = { "Đen", "Trắng", "Xanh", "Be", "Nâu", "Hồng" };
-        String[] sizes = { "S", "M", "L", "XL" };
-        int index = startIndex;
-
-        for (int i = 0; i < count; i++) {
-            String code = String.format("%s-%03d", codePrefix, index);
-            String name = names[i % names.length] + " " + (i + 1);
-            String size = sizes[i % sizes.length];
-            String color = colors[i % colors.length];
-            BigDecimal price = BigDecimal.valueOf(179000L + ((long) (i % 9) * 35000L));
-
-            products.add(new Product(code, name, group, segment, size, color, price));
-            index++;
+    private static synchronized void initSchemaIfNeeded() {
+        if (schemaInitialized) {
+            return;
         }
 
-        return index;
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Không tìm thấy PostgreSQL JDBC driver.", e);
+        }
+
+        String createTableSql = "CREATE TABLE IF NOT EXISTS shop_product ("
+                + "id TEXT PRIMARY KEY,"
+                + "name TEXT NOT NULL,"
+                + "group_name TEXT NOT NULL,"
+                + "segment TEXT NOT NULL,"
+                + "size TEXT NOT NULL,"
+                + "color TEXT NOT NULL,"
+                + "price NUMERIC(14, 2) NOT NULL)";
+
+        try (Connection connection = getConnection();
+                PreparedStatement statement = connection.prepareStatement(createTableSql)) {
+            statement.executeUpdate();
+            schemaInitialized = true;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể khởi tạo bảng shop_product.", e);
+        }
+    }
+
+    private static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
     public static final class Product {

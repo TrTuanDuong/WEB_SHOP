@@ -43,20 +43,26 @@ public class ClothingConfirmServlet extends HttpServlet {
             return;
         }
 
-        if (ClothingStore.exists(getServletContext(), productCode)) {
-            session.setAttribute("errorProductCode", "Mã sản phẩm đã tồn tại.");
-            session.setAttribute("enteredProductCode", productCode);
-            session.setAttribute("enteredName", name);
-            session.setAttribute("enteredCategory", category);
-            session.setAttribute("enteredSize", size);
-            session.setAttribute("enteredColor", color);
-            session.setAttribute("enteredPrice", priceText);
-            session.setAttribute("enteredStockQuantity", stockText);
+        try {
+            if (ClothingStore.exists(productCode)) {
+                session.setAttribute("errorProductCode", "Mã sản phẩm đã tồn tại.");
+                session.setAttribute("enteredProductCode", productCode);
+                session.setAttribute("enteredName", name);
+                session.setAttribute("enteredCategory", category);
+                session.setAttribute("enteredSize", size);
+                session.setAttribute("enteredColor", color);
+                session.setAttribute("enteredPrice", priceText);
+                session.setAttribute("enteredStockQuantity", stockText);
+                response.sendRedirect(request.getContextPath() + "/addproducts");
+                return;
+            }
+
+            ClothingStore.insert(productCode, name, category, size, color, price, stockQuantity);
+        } catch (IllegalStateException ex) {
+            session.setAttribute("formError", "Không thể kết nối CSDL. Kiểm tra DB_URL/DB_USER/DB_PASSWORD.");
             response.sendRedirect(request.getContextPath() + "/addproducts");
             return;
         }
-
-        ClothingStore.insert(getServletContext(), productCode, name, category, size, color, price, stockQuantity);
 
         session.setAttribute("lastCategory", category);
         session.setAttribute("successMessage", "Đã thêm sản phẩm quần áo thành công.");
