@@ -1,24 +1,24 @@
-# Lenh chay local
+# Lệnh chạy local
 
-## 0a) Chuan bi DB tren may moi (khuyen dung)
+## 0a) Chuẩn bị DB trên máy mới (khuyến dùng)
 
 ```bash
 cd "/duong/dan/toi/BTL_WEB"
 DB_USER=postgres PGPASSWORD=your_password ./setup_db_portable.sh
 ```
 
-Script se tu tao database `btl_web`, import schema + du lieu san pham, sau do in ra cac bien moi truong JDBC can dung.
+Script sẽ tự tạo database `btl_web`, import schema + dữ liệu sản phẩm, sau đó in ra các biến môi trường JDBC cần dùng.
 
-## 0) Chuan bi PostgreSQL (chay 1 lan)
+## 0) Chuẩn bị PostgreSQL (chạy 1 lần)
 
 ```bash
 createdb btl_web
 psql -d btl_web -f src/main/resources/schema.sql
 ```
 
-Neu chua tao user hoac mat khau khac, sua lai DB_USER/DB_PASSWORD o buoc 1.
+Nếu chưa tạo user hoặc mật khẩu khác, sửa lại `DB_USER`/`DB_PASSWORD` ở bước 1.
 
-## 1) Set Tomcat (chi can lam 1 lan moi terminal)
+## 1) Set Tomcat (chỉ cần làm 1 lần mỗi terminal)
 
 ```bash
 export TOMCAT_HOME="/Users/trantuanduong/Downloads/apache-tomcat-9.0.105"
@@ -27,9 +27,9 @@ export DB_USER="postgres"
 export DB_PASSWORD="postgres"
 ```
 
-Neu Tomcat cua ban nam o duong dan khac thi sua lai gia tri TOMCAT_HOME.
+Nếu Tomcat của bạn nằm ở đường dẫn khác thì sửa lại giá trị `TOMCAT_HOME`.
 
-## 2) Chay project (vao trang san pham)
+## 2) Chạy project (vào trang sản phẩm)
 
 ```bash
 cd "/Users/trantuanduong/Documents/CNTT_PTIT/Hoc ky 6/WEB/BTL_WEB"
@@ -37,10 +37,9 @@ mvn clean package
 cp target/BTL_WEB.war "$TOMCAT_HOME/webapps/BTL_WEB.war"
 "$TOMCAT_HOME/bin/startup.sh"
 open "http://localhost:8080/BTL_WEB/"
-
 ```
 
-## 3) Sau khi sua code, cap nhat lai ban moi
+## 3) Sau khi sửa code, cập nhật lại bản mới
 
 ```bash
 export TOMCAT_HOME="/Users/trantuanduong/Downloads/Các file cài đặt/apache-tomcat-9.0.115"
@@ -53,7 +52,7 @@ cp target/BTL_WEB.war "$TOMCAT_HOME/webapps/BTL_WEB.war"
 open "http://localhost:8080/BTL_WEB/"
 ```
 
-## 4) Tat server
+## 4) Tắt server
 
 ```bash
 "$TOMCAT_HOME/bin/shutdown.sh"

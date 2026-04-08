@@ -1,7 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
-<%@ page import="com.btl_web.ClothingStore" %>
-<%@ page import="com.btl_web.UserStore" %>
+<%@ page import="com.btl_web.model.ClothingStore" %>
+<%@ page import="com.btl_web.model.UserStore" %>
 <%
     UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
     if (currentUser == null || !"admin".equals(currentUser.getUsername())) {
