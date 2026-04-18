@@ -1,9 +1,10 @@
 package com.btl_web.controller;
 
+import com.btl_web.dao.UserDAO;
 import com.btl_web.model.CartStore;
 import com.btl_web.model.OrderStore;
 import com.btl_web.model.ShopCatalog;
-import com.btl_web.model.UserStore;
+import com.btl_web.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,19 +19,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet(urlPatterns = { "/cart", "/cart/add", "/cart/remove", "/cart/checkout" })
+@WebServlet(urlPatterns = {"/cart", "/cart/add", "/cart/remove", "/cart/checkout"})
 public class CartServlet extends HttpServlet {
+
+    private UserDAO userDAO = new UserDAO();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+
+        User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
 
-        UserStore.User latestUser = UserStore.findByUsername(getServletContext(), currentUser.getUsername());
+        User latestUser = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
         List<CartItemView> items = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
 
@@ -47,7 +52,7 @@ public class CartServlet extends HttpServlet {
 
         request.setAttribute("cartItems", items);
         request.setAttribute("cartTotal", total);
-        request.setAttribute("profileReady", UserStore.isCheckoutProfileReady(latestUser));
+        request.setAttribute("profileReady", userDAO.isCheckoutProfileReady(latestUser));
         request.setAttribute("defaultAddressId", latestUser == null ? "" : latestUser.getDefaultAddressId());
         request.setAttribute("profileUser", latestUser);
         request.getRequestDispatcher("/cart.jsp").forward(request, response);
@@ -80,7 +85,7 @@ public class CartServlet extends HttpServlet {
 
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        UserStore.User currentUser = (UserStore.User) request.getSession().getAttribute("currentUser");
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         String productId = normalize(request.getParameter("productId"));
         int quantity = parsePositiveInt(request.getParameter("quantity"));
 
@@ -98,7 +103,7 @@ public class CartServlet extends HttpServlet {
 
     private void removeFromCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        UserStore.User currentUser = (UserStore.User) request.getSession().getAttribute("currentUser");
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         String productId = normalize(request.getParameter("productId"));
         CartStore.removeItem(getServletContext(), currentUser.getUsername(), productId);
         response.sendRedirect(request.getContextPath() + "/cart");
@@ -106,9 +111,9 @@ public class CartServlet extends HttpServlet {
 
     private void checkout(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        UserStore.User currentUser = (UserStore.User) request.getSession().getAttribute("currentUser");
-        UserStore.User latestUser = UserStore.findByUsername(getServletContext(), currentUser.getUsername());
-        if (!UserStore.isCheckoutProfileReady(latestUser)) {
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
+        User latestUser = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
+        if (!userDAO.isCheckoutProfileReady(latestUser)) {
             request.getSession().setAttribute(
                     "profileError",
                     "Trước khi đặt hàng, bạn cần cập nhật thông tin cá nhân cố định và thiết lập địa chỉ giao hàng mặc định.");
@@ -196,6 +201,7 @@ public class CartServlet extends HttpServlet {
     }
 
     public static final class CartItemView {
+
         private final ShopCatalog.Product product;
         private final int quantity;
         private final BigDecimal lineTotal;

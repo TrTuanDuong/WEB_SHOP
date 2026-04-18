@@ -1,8 +1,8 @@
+<%@page import="com.btl_web.model.User"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.math.BigDecimal" %>
 <%@ page import="com.btl_web.controller.CartServlet" %>
-<%@ page import="com.btl_web.model.UserStore" %>
 <%
     @SuppressWarnings("unchecked")
     List<CartServlet.CartItemView> cartItems = (List<CartServlet.CartItemView>) request.getAttribute("cartItems");
@@ -12,13 +12,13 @@
     BigDecimal cartTotal = (BigDecimal) request.getAttribute("cartTotal");
     if (cartTotal == null) cartTotal = BigDecimal.ZERO;
 
-    UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+    User currentUser = (User) session.getAttribute("currentUser");
     if (currentUser == null) {
         response.sendRedirect(request.getContextPath() + "/auth/login");
         return;
     }
 
-    UserStore.User profileUser = (UserStore.User) request.getAttribute("profileUser");
+    User profileUser = (User) request.getAttribute("profileUser");
     if (profileUser == null) {
         profileUser = currentUser;
     }
@@ -37,12 +37,15 @@
     <title>Giỏ hàng</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             min-height: 100vh;
             font-family: "Plus Jakarta Sans", sans-serif;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
             background: linear-gradient(160deg, #f8f2e8 0%, #e7f2ef 100%);
             padding: 12px 18px 24px;
             color: #22302f;
@@ -68,8 +71,10 @@
         }
 
         .logo {
-            font-family: "Archivo Black", sans-serif;
+            font-family: "Plus Jakarta Sans", sans-serif;
             font-size: 1.12rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
         .top-links {
@@ -162,6 +167,12 @@
             font: inherit;
             font-weight: 700;
             cursor: pointer;
+        }
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
         }
         .btn-primary { background: #0d6c63; color: #fff; }
         .btn-soft { background: #edf1ef; color: #395553; }

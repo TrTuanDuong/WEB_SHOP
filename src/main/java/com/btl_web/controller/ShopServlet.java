@@ -2,7 +2,8 @@ package com.btl_web.controller;
 
 import com.btl_web.model.CartStore;
 import com.btl_web.model.ShopCatalog;
-import com.btl_web.model.UserStore;
+import com.btl_web.model.User;
+
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -68,7 +69,7 @@ public class ShopServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
         if (session != null) {
-            UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+            User currentUser = (User) session.getAttribute("currentUser");
             if (currentUser != null) {
                 request.setAttribute(
                         "cartCount",

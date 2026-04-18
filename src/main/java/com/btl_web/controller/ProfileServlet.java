@@ -1,7 +1,8 @@
 package com.btl_web.controller;
 
-import com.btl_web.model.UserStore;
 
+import com.btl_web.dao.UserDAO;
+import com.btl_web.model.User;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -13,15 +14,16 @@ import java.io.IOException;
 @WebServlet(urlPatterns = { "/profile", "/profile/update", "/profile/address/add", "/profile/address/default",
         "/profile/address/update" })
 public class ProfileServlet extends HttpServlet {
+    UserDAO userDAO = new UserDAO();
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        UserStore.User currentUser = requireLogin(request, response);
+        User currentUser = requireLogin(request, response);
         if (currentUser == null) {
             return;
         }
-
-        UserStore.User latest = UserStore.findByUsername(getServletContext(), currentUser.getUsername());
+        
+        User latest = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
         request.setAttribute("profileUser", latest);
         request.getRequestDispatcher("/profile.jsp").forward(request, response);
     }
@@ -30,7 +32,7 @@ public class ProfileServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         request.setCharacterEncoding("UTF-8");
-        UserStore.User currentUser = requireLogin(request, response);
+        User currentUser = requireLogin(request, response);
         if (currentUser == null) {
             return;
         }
@@ -59,10 +61,10 @@ public class ProfileServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/profile");
     }
 
-    private void updateProfile(HttpServletRequest request, HttpServletResponse response, UserStore.User currentUser)
+    private void updateProfile(HttpServletRequest request, HttpServletResponse response, User currentUser)
             throws IOException {
-        UserStore.User latest = UserStore.findByUsername(getServletContext(), currentUser.getUsername());
-        if (UserStore.isCheckoutProfileReady(latest)) {
+        User latest = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
+        if (userDAO.isCheckoutProfileReady(latest)) {
             request.getSession().setAttribute("profileError",
                     "Thông tin cá nhân cố định đã được xác lập. Muốn sửa vui lòng liên hệ admin.");
             response.sendRedirect(request.getContextPath() + "/profile");
@@ -116,7 +118,7 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
-        UserStore.OperationResult result = UserStore.updateProfile(
+        UserDAO.OperationResult result = UserDAO.updateProfile(
                 getServletContext(),
                 currentUser.getUsername(),
                 fullName,
@@ -130,7 +132,7 @@ public class ProfileServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/profile");
     }
 
-    private void addAddress(HttpServletRequest request, HttpServletResponse response, UserStore.User currentUser)
+    private void addAddress(HttpServletRequest request, HttpServletResponse response, User currentUser)
             throws IOException {
         String recipientName = normalize(request.getParameter("recipientName"));
         String recipientPhone = normalize(request.getParameter("recipientPhone"));
@@ -149,7 +151,7 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
-        UserStore.OperationResult result = UserStore.addShippingAddress(
+        UserDAO.OperationResult result = UserDAO.addShippingAddress(
                 getServletContext(),
                 currentUser.getUsername(),
                 recipientName,
@@ -161,10 +163,10 @@ public class ProfileServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/profile");
     }
 
-    private void setDefaultAddress(HttpServletRequest request, HttpServletResponse response, UserStore.User currentUser)
+    private void setDefaultAddress(HttpServletRequest request, HttpServletResponse response, User currentUser)
             throws IOException {
         String addressId = normalize(request.getParameter("addressId"));
-        UserStore.OperationResult result = UserStore.setDefaultAddress(
+        UserDAO.OperationResult result = UserDAO.setDefaultAddress(
                 getServletContext(),
                 currentUser.getUsername(),
                 addressId);
@@ -172,7 +174,7 @@ public class ProfileServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/profile");
     }
 
-    private void updateAddress(HttpServletRequest request, HttpServletResponse response, UserStore.User currentUser)
+    private void updateAddress(HttpServletRequest request, HttpServletResponse response, User currentUser)
             throws IOException {
         String addressId = normalize(request.getParameter("addressId"));
         String recipientName = normalize(request.getParameter("recipientName"));
@@ -192,7 +194,7 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
-        UserStore.OperationResult result = UserStore.updateShippingAddress(
+        UserDAO.OperationResult result = UserDAO.updateShippingAddress(
                 getServletContext(),
                 currentUser.getUsername(),
                 addressId,
@@ -205,10 +207,10 @@ public class ProfileServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/profile");
     }
 
-    private UserStore.User requireLogin(HttpServletRequest request, HttpServletResponse response)
+    private User requireLogin(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
-        UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+        User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return null;

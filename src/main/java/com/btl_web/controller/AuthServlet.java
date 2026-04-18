@@ -1,7 +1,7 @@
 package com.btl_web.controller;
 
-import com.btl_web.model.UserStore;
-
+import com.btl_web.dao.UserDAO;
+import com.btl_web.model.User;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -12,6 +12,8 @@ import java.io.IOException;
 
 @WebServlet(urlPatterns = { "/auth/login", "/auth/register", "/auth/logout" })
 public class AuthServlet extends HttpServlet {
+    private UserDAO userDAO = new UserDAO();
+           
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -63,7 +65,7 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        UserStore.User user = UserStore.login(getServletContext(), username, password);
+        User user = userDAO.login(getServletContext(), username, password);
         if (user == null) {
             request.setAttribute("authError", "Sai tài khoản hoặc mật khẩu.");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
@@ -110,7 +112,7 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        boolean registered = UserStore.register(getServletContext(), username, fullName, password);
+        boolean registered = userDAO.register(getServletContext(), username, fullName, password);
         if (!registered) {
             request.setAttribute("authError", "Tên đăng nhập đã tồn tại.");
             request.getRequestDispatcher("/register.jsp").forward(request, response);

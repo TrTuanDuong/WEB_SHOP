@@ -1,9 +1,9 @@
+<%@page import="com.btl_web.model.User"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.btl_web.model.OrderStore" %>
-<%@ page import="com.btl_web.model.UserStore" %>
 <%
-    UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+    User currentUser = (User) session.getAttribute("currentUser");
     if (currentUser == null) {
         response.sendRedirect(request.getContextPath() + "/auth/login");
         return;
@@ -23,12 +23,15 @@
     <title>Đơn hàng</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             min-height: 100vh;
             font-family: "Plus Jakarta Sans", sans-serif;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
             background: linear-gradient(180deg, #faf8f2 0%, #f3efe7 100%);
             padding: 12px 18px 24px;
             color: #22302f;
@@ -51,7 +54,12 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-        .logo { font-family: "Archivo Black", sans-serif; font-size: 1.05rem; }
+        .logo {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
         .links { display: flex; gap: 8px; flex-wrap: wrap; }
         .link-btn {
             display: inline-block; text-decoration: none; border: 1px solid #ced8d2; border-radius: 10px;
@@ -67,6 +75,12 @@
             border-color: #6b1f24;
             background: #6b1f24;
             color: #fff;
+        }
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
         }
         .card {
             max-width: 1280px;

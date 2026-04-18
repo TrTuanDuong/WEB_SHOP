@@ -1,16 +1,19 @@
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/AddProductsServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/AdminContactServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/AuthServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/CartServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/ClothingBackServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/ClothingConfirmServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/ClothingPreviewServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/OrderServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/ProfileServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/controller/ShopServlet.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/model/CartStore.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/model/ClothingStore.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/model/DbSupport.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/model/OrderStore.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/model/ShopCatalog.java
-/Users/trantuanduong/Documents/CNTT_PTIT/Học kỳ 6/WEB/BTL_WEB/src/main/java/com/btl_web/model/UserStore.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\AddProductsServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\AdminContactServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\AuthServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\CartServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingBackServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingConfirmServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingPreviewServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\OrderServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ProfileServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ShopServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\AddressDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\UserDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\Address.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\CartStore.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\ClothingStore.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\DbSupport.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\OrderStore.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\ShopCatalog.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\User.java
