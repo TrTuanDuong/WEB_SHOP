@@ -1,5 +1,6 @@
 package com.btl_web.controller;
 
+import com.btl_web.model.DbSupport;
 import com.btl_web.model.UserStore;
 
 import javax.servlet.ServletException;
@@ -9,7 +10,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +23,6 @@ import java.util.List;
 
 @WebServlet(urlPatterns = { "/admin-contact", "/admin-contact/send" })
 public class AdminContactServlet extends HttpServlet {
-    private static final String REQUESTS_KEY = "adminContactRequests";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Override
@@ -59,38 +64,46 @@ public class AdminContactServlet extends HttpServlet {
     }
 
     private void saveRequest(HttpServletRequest request, UserStore.User currentUser, String topic, String content) {
-        List<ContactRequest> requests = getMutableRequests(request);
-        synchronized (requests) {
-            requests.add(0, new ContactRequest(
-                    currentUser.getUsername(),
-                    currentUser.getFullName(),
-                    topic,
-                    content,
-                    LocalDateTime.now().format(TIME_FORMATTER)));
+        String sql = "INSERT INTO contact_requests (username, full_name, topic, content) VALUES (?, ?, ?, ?)";
+        try (Connection connection = DbSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, currentUser.getUsername());
+            statement.setString(2, currentUser.getFullName());
+            statement.setString(3, topic);
+            statement.setString(4, content);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể lưu yêu cầu liên hệ vào CSDL.", e);
         }
     }
 
     private boolean isAdmin(UserStore.User currentUser) {
-        return currentUser != null && "admin".equals(currentUser.getUsername());
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<ContactRequest> getMutableRequests(HttpServletRequest request) {
-        synchronized (getServletContext()) {
-            Object value = getServletContext().getAttribute(REQUESTS_KEY);
-            if (value == null) {
-                List<ContactRequest> requests = new ArrayList<>();
-                getServletContext().setAttribute(REQUESTS_KEY, requests);
-                return requests;
-            }
-            return (List<ContactRequest>) value;
-        }
+        return UserStore.isAdmin(currentUser);
     }
 
     private List<ContactRequest> allRequests(HttpServletRequest request) {
-        List<ContactRequest> requests = getMutableRequests(request);
-        synchronized (requests) {
-            return Collections.unmodifiableList(new ArrayList<>(requests));
+        String sql = "SELECT username, full_name, topic, content, created_at "
+                + "FROM contact_requests ORDER BY created_at DESC";
+        List<ContactRequest> requests = new ArrayList<>();
+        try (Connection connection = DbSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                Timestamp createdAtValue = resultSet.getTimestamp("created_at");
+                String createdAt = createdAtValue == null
+                        ? ""
+                        : createdAtValue.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                .format(TIME_FORMATTER);
+                requests.add(new ContactRequest(
+                        resultSet.getString("username"),
+                        resultSet.getString("full_name"),
+                        resultSet.getString("topic"),
+                        resultSet.getString("content"),
+                        createdAt));
+            }
+            return Collections.unmodifiableList(requests);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải yêu cầu liên hệ từ CSDL.", e);
         }
     }
 

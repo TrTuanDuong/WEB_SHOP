@@ -32,14 +32,8 @@
     session.removeAttribute("shopSuccess");
     session.removeAttribute("shopError");
 
-    @SuppressWarnings("unchecked")
-    java.util.Map<String, Integer> cart = (java.util.Map<String, Integer>) session.getAttribute("cart");
-    int cartCount = 0;
-    if (cart != null) {
-        for (Integer value : cart.values()) {
-            cartCount += value;
-        }
-    }
+    Integer cartCountObj = (Integer) request.getAttribute("cartCount");
+    int cartCount = cartCountObj == null ? 0 : cartCountObj;
 
     String querySuffix = "&group=" + java.net.URLEncoder.encode(group, java.nio.charset.StandardCharsets.UTF_8)
             + "&segment=" + java.net.URLEncoder.encode(segment, java.nio.charset.StandardCharsets.UTF_8)
@@ -387,13 +381,13 @@
             <a class="link-btn primary" href="<%= request.getContextPath() %>/auth/register">Đăng ký</a>
         <% } else { %>
             <span class="badge">Xin chào, <%= currentUser.getFullName() %></span>
-            <% if ("admin".equals(currentUser.getUsername())) { %>
+            <% if (currentUser.isAdmin()) { %>
                 <a class="link-btn primary" href="<%= request.getContextPath() %>/addproducts">Thêm sản phẩm</a>
             <% } %>
             <a class="link-btn" href="<%= request.getContextPath() %>/profile">Trang cá nhân</a>
             <a class="link-btn" href="<%= request.getContextPath() %>/cart">Giỏ hàng(<%= cartCount %>)</a>
             <a class="link-btn" href="<%= request.getContextPath() %>/orders">Đơn hàng</a>
-            <% if ("admin".equals(currentUser.getUsername())) { %>
+            <% if (currentUser.isAdmin()) { %>
                 <a class="link-btn" href="<%= request.getContextPath() %>/admin-contact">Yêu cầu</a>
             <% } else { %>
                 <a class="link-btn" href="<%= request.getContextPath() %>/admin-contact">Liên hệ admin</a>

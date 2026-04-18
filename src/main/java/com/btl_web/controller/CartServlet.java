@@ -1,5 +1,6 @@
 package com.btl_web.controller;
 
+import com.btl_web.model.CartStore;
 import com.btl_web.model.OrderStore;
 import com.btl_web.model.ShopCatalog;
 import com.btl_web.model.UserStore;
@@ -22,18 +23,18 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (request.getSession().getAttribute("currentUser") == null) {
+        HttpSession session = request.getSession();
+        UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
 
-        HttpSession session = request.getSession();
-        UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
         UserStore.User latestUser = UserStore.findByUsername(getServletContext(), currentUser.getUsername());
         List<CartItemView> items = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
 
-        for (Map.Entry<String, Integer> entry : getCart(session).entrySet()) {
+        for (Map.Entry<String, Integer> entry : getCart(currentUser.getUsername()).entrySet()) {
             ShopCatalog.Product product = ShopCatalog.findById(getServletContext(), entry.getKey());
             if (product == null) {
                 continue;
@@ -79,6 +80,7 @@ public class CartServlet extends HttpServlet {
 
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        UserStore.User currentUser = (UserStore.User) request.getSession().getAttribute("currentUser");
         String productId = normalize(request.getParameter("productId"));
         int quantity = parsePositiveInt(request.getParameter("quantity"));
 
@@ -88,8 +90,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Map<String, Integer> cart = getCart(request.getSession());
-        cart.put(productId, cart.getOrDefault(productId, 0) + quantity);
+        CartStore.addItem(getServletContext(), currentUser.getUsername(), productId, quantity);
 
         request.getSession().setAttribute("shopSuccess", "Đã thêm sản phẩm vào giỏ hàng.");
         response.sendRedirect(request.getContextPath() + "/shop");
@@ -97,8 +98,9 @@ public class CartServlet extends HttpServlet {
 
     private void removeFromCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        UserStore.User currentUser = (UserStore.User) request.getSession().getAttribute("currentUser");
         String productId = normalize(request.getParameter("productId"));
-        getCart(request.getSession()).remove(productId);
+        CartStore.removeItem(getServletContext(), currentUser.getUsername(), productId);
         response.sendRedirect(request.getContextPath() + "/cart");
     }
 
@@ -114,7 +116,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Map<String, Integer> cart = getCart(request.getSession());
+        Map<String, Integer> cart = getCart(currentUser.getUsername());
         if (cart.isEmpty()) {
             request.getSession().setAttribute("shopError", "Giỏ hàng đang trống.");
             response.sendRedirect(request.getContextPath() + "/cart");
@@ -163,23 +165,14 @@ public class CartServlet extends HttpServlet {
 
         OrderStore.createOrder(getServletContext(), latestUser, lines, totalForLines(lines));
 
-        for (String selectedProductId : selectedItems.keySet()) {
-            cart.remove(selectedProductId);
-        }
+        CartStore.removeItems(getServletContext(), currentUser.getUsername(), new ArrayList<>(selectedItems.keySet()));
 
         request.getSession().setAttribute("shopSuccess", "Đặt hàng thành công. Cảm ơn bạn đã mua sắm!");
         response.sendRedirect(request.getContextPath() + "/orders");
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Integer> getCart(HttpSession session) {
-        Object value = session.getAttribute("cart");
-        if (value == null) {
-            Map<String, Integer> cart = new HashMap<>();
-            session.setAttribute("cart", cart);
-            return cart;
-        }
-        return (Map<String, Integer>) value;
+    private Map<String, Integer> getCart(String username) {
+        return CartStore.getCartByUsername(getServletContext(), username);
     }
 
     private BigDecimal totalForLines(List<OrderStore.OrderLine> lines) {

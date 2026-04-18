@@ -9,7 +9,7 @@
         return;
     }
 
-    boolean adminView = "admin".equals(currentUser.getUsername());
+    boolean adminView = currentUser.isAdmin();
 
     String contactError = (String) session.getAttribute("contactError");
     String contactSuccess = (String) session.getAttribute("contactSuccess");

@@ -4,7 +4,7 @@
 <%@ page import="com.btl_web.model.UserStore" %>
 <%
     UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
-    if (currentUser == null || !"admin".equals(currentUser.getUsername())) {
+    if (currentUser == null || !currentUser.isAdmin()) {
         session.setAttribute("authError", "Chỉ tài khoản admin mới được truy cập trang quản trị sản phẩm.");
         response.sendRedirect(request.getContextPath() + "/auth/login");
         return;

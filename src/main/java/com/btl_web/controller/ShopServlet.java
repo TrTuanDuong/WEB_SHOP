@@ -1,12 +1,15 @@
 package com.btl_web.controller;
 
+import com.btl_web.model.CartStore;
 import com.btl_web.model.ShopCatalog;
+import com.btl_web.model.UserStore;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +65,16 @@ public class ShopServlet extends HttpServlet {
         request.setAttribute("page", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalItems", totalItems);
+
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+            if (currentUser != null) {
+                request.setAttribute(
+                        "cartCount",
+                        CartStore.totalQuantityByUsername(getServletContext(), currentUser.getUsername()));
+            }
+        }
 
         request.getRequestDispatcher("/shop.jsp").forward(request, response);
     }

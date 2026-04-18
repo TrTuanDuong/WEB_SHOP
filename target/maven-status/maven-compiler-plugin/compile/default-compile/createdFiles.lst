@@ -10,6 +10,7 @@ com/btl_web/model/ShopCatalog.class
 com/btl_web/controller/AdminContactServlet.class
 com/btl_web/model/UserStore$Address.class
 com/btl_web/model/OrderStore.class
+com/btl_web/model/CartStore.class
 com/btl_web/controller/ClothingPreviewServlet.class
 com/btl_web/controller/OrderServlet.class
 com/btl_web/model/OrderStore$OrderStatus.class
@@ -22,3 +23,4 @@ com/btl_web/controller/ClothingBackServlet.class
 com/btl_web/model/OrderStore$Order.class
 com/btl_web/model/ClothingStore$ClothingItem.class
 com/btl_web/model/UserStore$User.class
+com/btl_web/model/DbSupport.class

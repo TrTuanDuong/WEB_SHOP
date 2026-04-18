@@ -17,7 +17,7 @@ public class AddProductsServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
-        if (currentUser == null || !"admin".equals(currentUser.getUsername())) {
+        if (!UserStore.isAdmin(currentUser)) {
             session.setAttribute("authError", "Chỉ tài khoản admin mới được truy cập trang quản trị sản phẩm.");
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
