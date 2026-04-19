@@ -19,7 +19,7 @@ public final class OrderStore {
     private OrderStore() {
     }
 
-    public static Order createOrder(ServletContext context, UserStore.User user, List<OrderLine> lines,
+    public static Order createOrder(ServletContext context, User user, List<OrderLine> lines,
             BigDecimal total) {
         String orderId = UUID.randomUUID().toString();
         LocalDateTime createdAt = LocalDateTime.now();

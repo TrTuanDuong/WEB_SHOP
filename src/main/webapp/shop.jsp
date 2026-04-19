@@ -1,7 +1,7 @@
+<%@page import="com.btl_web.model.User"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.btl_web.model.ShopCatalog" %>
-<%@ page import="com.btl_web.model.UserStore" %>
 <%
     @SuppressWarnings("unchecked")
     List<ShopCatalog.Product> products = (List<ShopCatalog.Product>) request.getAttribute("products");
@@ -24,7 +24,7 @@
     if (segment == null) segment = "all";
     if (q == null) q = "";
 
-    UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+    User currentUser = (User) session.getAttribute("currentUser");
     String authSuccess = (String) session.getAttribute("authSuccess");
     String shopSuccess = (String) session.getAttribute("shopSuccess");
     String shopError = (String) session.getAttribute("shopError");

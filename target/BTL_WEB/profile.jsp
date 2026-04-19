@@ -1,22 +1,25 @@
+<%@page import="com.btl_web.dao.UserDAO"%>
+<%@page import="com.btl_web.model.User"%>
+<%@page import="com.btl_web.model.Address"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.btl_web.model.UserStore" %>
 <%@ page import="java.util.List" %>
 <%
-    UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+    User currentUser = (User) session.getAttribute("currentUser");
     if (currentUser == null) {
         response.sendRedirect(request.getContextPath() + "/auth/login");
         return;
     }
-
-    UserStore.User profileUser = (UserStore.User) request.getAttribute("profileUser");
+    UserDAO userDAO = new UserDAO();
+    User profileUser = (User) request.getAttribute("profileUser");
     if (profileUser == null) {
         profileUser = currentUser;
     }
 
-    List<UserStore.Address> addresses = profileUser.getShippingAddressesView();
+    List<Address> addresses = profileUser.getShippingAddressesView();
     String profileError = (String) session.getAttribute("profileError");
     String profileSuccess = (String) session.getAttribute("profileSuccess");
-    boolean profileLocked = UserStore.isFixedProfileLocked(profileUser);
+    boolean profileLocked = userDAO.isFixedProfileLocked(profileUser);
     session.removeAttribute("profileError");
     session.removeAttribute("profileSuccess");
 %>
@@ -158,6 +161,44 @@
             background: #fff;
         }
 
+        .address-form,
+        .address-item form {
+            display: grid;
+            gap: 10px;
+        }
+
+        .address-form .field,
+        .address-item .field {
+            margin-bottom: 0;
+        }
+
+        .address-form .form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .address-form .check {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #4d6664;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .address-form .check input,
+        .address-item .inline-actions input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            flex: 0 0 auto;
+        }
+
         .field input[readonly],
         .field textarea[readonly] {
             background: #f4f7f5;
@@ -212,6 +253,10 @@
             gap: 8px;
         }
 
+        .address-item form {
+            gap: 8px;
+        }
+
         .address-item .name {
             font-weight: 700;
             margin-bottom: 4px;
@@ -235,6 +280,8 @@
 
         .inline-actions {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
             gap: 8px;
             flex-wrap: wrap;
         }
@@ -310,7 +357,7 @@
         <h2>Địa chỉ giao hàng</h2>
         <p class="desc">Bạn có thể thêm nhiều địa chỉ. Hãy chọn 1 địa chỉ mặc định để đặt hàng nhanh.</p>
 
-        <form action="<%= request.getContextPath() %>/profile/address/add" method="post">
+        <form class="address-form" action="<%= request.getContextPath() %>/profile/address/add" method="post">
             <div class="field">
                 <label for="recipientName">Tên người nhận</label>
                 <input id="recipientName" name="recipientName">
@@ -323,17 +370,17 @@
                 <label for="shippingAddress">Địa chỉ giao hàng</label>
                 <textarea id="shippingAddress" name="shippingAddress"></textarea>
             </div>
-            <div class="field">
-                <label><input type="checkbox" name="setDefault"> Đặt làm mặc định</label>
+            <div class="form-actions">
+                <label class="check"><input type="checkbox" name="setDefault"> Đặt làm mặc định</label>
+                <button class="btn btn-primary" type="submit">Thêm địa chỉ giao hàng</button>
             </div>
-            <button class="btn btn-primary" type="submit">Thêm địa chỉ giao hàng</button>
         </form>
 
         <div class="address-list">
             <% if (addresses.isEmpty()) { %>
                 <div class="address-item">Chưa có địa chỉ giao hàng.</div>
             <% } else { %>
-                <% for (UserStore.Address address : addresses) { %>
+                <% for (Address address : addresses) { %>
                     <div class="address-item">
                         <form action="<%= request.getContextPath() %>/profile/address/update" method="post">
                             <input type="hidden" name="addressId" value="<%= address.getId() %>">

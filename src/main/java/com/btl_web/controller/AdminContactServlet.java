@@ -1,7 +1,8 @@
 package com.btl_web.controller;
 
+import com.btl_web.dao.UserDAO;
 import com.btl_web.model.DbSupport;
-import com.btl_web.model.UserStore;
+import com.btl_web.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -23,12 +24,13 @@ import java.util.List;
 
 @WebServlet(urlPatterns = { "/admin-contact", "/admin-contact/send" })
 public class AdminContactServlet extends HttpServlet {
+    private UserDAO userDAO = new UserDAO();
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        UserStore.User currentUser = requireLogin(request, response);
+        User currentUser = requireLogin(request, response);
         if (response.isCommitted()) {
             return;
         }
@@ -44,7 +46,7 @@ public class AdminContactServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         request.setCharacterEncoding("UTF-8");
-        UserStore.User currentUser = requireLogin(request, response);
+        User currentUser = requireLogin(request, response);
         if (currentUser == null) {
             return;
         }
@@ -63,7 +65,7 @@ public class AdminContactServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin-contact");
     }
 
-    private void saveRequest(HttpServletRequest request, UserStore.User currentUser, String topic, String content) {
+    private void saveRequest(HttpServletRequest request, User currentUser, String topic, String content) {
         String sql = "INSERT INTO contact_requests (username, full_name, topic, content) VALUES (?, ?, ?, ?)";
         try (Connection connection = DbSupport.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -77,8 +79,8 @@ public class AdminContactServlet extends HttpServlet {
         }
     }
 
-    private boolean isAdmin(UserStore.User currentUser) {
-        return UserStore.isAdmin(currentUser);
+    private boolean isAdmin(User currentUser) {
+        return userDAO.isAdmin(currentUser);
     }
 
     private List<ContactRequest> allRequests(HttpServletRequest request) {
@@ -107,10 +109,10 @@ public class AdminContactServlet extends HttpServlet {
         }
     }
 
-    private UserStore.User requireLogin(HttpServletRequest request, HttpServletResponse response)
+    private User requireLogin(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
-        UserStore.User currentUser = (UserStore.User) session.getAttribute("currentUser");
+        User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return null;
