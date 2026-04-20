@@ -1,9 +1,10 @@
 package com.btl_web.controller;
 
+import com.btl_web.dao.ProductDAO;
 import com.btl_web.dao.UserDAO;
 import com.btl_web.model.CartStore;
 import com.btl_web.model.OrderStore;
-import com.btl_web.model.ShopCatalog;
+import com.btl_web.model.Product;
 import com.btl_web.model.User;
 
 import javax.servlet.ServletException;
@@ -14,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.Map;
 public class CartServlet extends HttpServlet {
 
     private UserDAO userDAO = new UserDAO();
+    private ProductDAO productDAO = new ProductDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -40,14 +43,17 @@ public class CartServlet extends HttpServlet {
         BigDecimal total = BigDecimal.ZERO;
 
         for (Map.Entry<String, Integer> entry : getCart(currentUser.getUsername()).entrySet()) {
-            ShopCatalog.Product product = ShopCatalog.findById(getServletContext(), entry.getKey());
-            if (product == null) {
-                continue;
+            try {
+                Product product = productDAO.findById(getServletContext(), entry.getKey());
+                int quantity = entry.getValue();
+                BigDecimal lineTotal = product.getPrice().multiply(BigDecimal.valueOf(quantity));
+                total = total.add(lineTotal);
+                items.add(new CartItemView(product, quantity, lineTotal));
+            } catch (SQLException ex) {
+                System.getLogger(CartServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             }
-            int quantity = entry.getValue();
-            BigDecimal lineTotal = product.getPrice().multiply(BigDecimal.valueOf(quantity));
-            total = total.add(lineTotal);
-            items.add(new CartItemView(product, quantity, lineTotal));
+          
+
         }
 
         request.setAttribute("cartItems", items);
@@ -68,7 +74,11 @@ public class CartServlet extends HttpServlet {
 
         String path = request.getServletPath();
         if ("/cart/add".equals(path)) {
-            addToCart(request, response);
+            try {
+                addToCart(request, response);
+            } catch (SQLException ex) {
+                System.getLogger(CartServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
             return;
         }
         if ("/cart/remove".equals(path)) {
@@ -76,20 +86,24 @@ public class CartServlet extends HttpServlet {
             return;
         }
         if ("/cart/checkout".equals(path)) {
-            checkout(request, response);
+            try {
+                checkout(request, response);
+            } catch (SQLException ex) {
+                System.getLogger(CartServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
             return;
         }
 
         response.sendRedirect(request.getContextPath() + "/cart");
     }
-
+    //Them vao gio hang cua khach hang
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException, SQLException {
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         String productId = normalize(request.getParameter("productId"));
         int quantity = parsePositiveInt(request.getParameter("quantity"));
 
-        if (quantity <= 0 || ShopCatalog.findById(getServletContext(), productId) == null) {
+        if (quantity <= 0 || productDAO.findById(getServletContext(), productId) == null) {
             request.getSession().setAttribute("shopError", "Không thể thêm sản phẩm vào giỏ.");
             response.sendRedirect(request.getContextPath() + "/shop");
             return;
@@ -110,7 +124,7 @@ public class CartServlet extends HttpServlet {
     }
 
     private void checkout(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException, SQLException {
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         User latestUser = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
         if (!userDAO.isCheckoutProfileReady(latestUser)) {
@@ -152,7 +166,7 @@ public class CartServlet extends HttpServlet {
 
         List<OrderStore.OrderLine> lines = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : selectedItems.entrySet()) {
-            ShopCatalog.Product product = ShopCatalog.findById(getServletContext(), entry.getKey());
+            Product product = productDAO.findById(getServletContext(), entry.getKey());
             if (product != null) {
                 lines.add(new OrderStore.OrderLine(
                         product.getId(),
@@ -202,17 +216,17 @@ public class CartServlet extends HttpServlet {
 
     public static final class CartItemView {
 
-        private final ShopCatalog.Product product;
+        private final Product product;
         private final int quantity;
         private final BigDecimal lineTotal;
 
-        public CartItemView(ShopCatalog.Product product, int quantity, BigDecimal lineTotal) {
+        public CartItemView(Product product, int quantity, BigDecimal lineTotal) {
             this.product = product;
             this.quantity = quantity;
             this.lineTotal = lineTotal;
         }
 
-        public ShopCatalog.Product getProduct() {
+        public Product getProduct() {
             return product;
         }
 
