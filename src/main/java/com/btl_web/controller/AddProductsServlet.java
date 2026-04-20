@@ -14,6 +14,7 @@ import java.io.IOException;
 @WebServlet("/addproducts")
 public class AddProductsServlet extends HttpServlet {
     private UserDAO userDAO = new UserDAO();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -26,5 +27,11 @@ public class AddProductsServlet extends HttpServlet {
         }
 
         request.getRequestDispatcher("/addproducts.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doGet(request, response);
     }
 }

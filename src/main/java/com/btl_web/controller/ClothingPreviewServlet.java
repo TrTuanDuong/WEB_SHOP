@@ -107,7 +107,7 @@ public class ClothingPreviewServlet extends HttpServlet {
         }
 
         if (hasError) {
-            request.getRequestDispatcher("/addproducts").forward(request, response);
+            request.getRequestDispatcher("/addproducts.jsp").forward(request, response);
             return;
         }
 

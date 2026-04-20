@@ -2,7 +2,6 @@
 <%@page import="com.btl_web.model.User"%>
 <%@page import="com.btl_web.model.Address"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="com.btl_web.model.UserStore" %>
 <%@ page import="java.util.List" %>
 <%
     User currentUser = (User) session.getAttribute("currentUser");
@@ -75,8 +74,10 @@
         }
 
         .logo {
-            font-family: "Archivo Black", sans-serif;
+            font-family: "Plus Jakarta Sans", sans-serif;
             font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
         .links {

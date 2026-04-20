@@ -1,10 +1,10 @@
+<%@page import="com.btl_web.model.Product"%>
 <%@page import="com.btl_web.model.User"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
-<%@ page import="com.btl_web.model.ShopCatalog" %>
 <%
     @SuppressWarnings("unchecked")
-    List<ShopCatalog.Product> products = (List<ShopCatalog.Product>) request.getAttribute("products");
+    List<Product> products = (List<Product>) request.getAttribute("products");
     if (products == null) {
         products = java.util.Collections.emptyList();
     }
@@ -443,7 +443,7 @@
             <div class="empty">Không có sản phẩm phù hợp bộ lọc hiện tại.</div>
         <% } else { %>
             <div class="grid">
-                <% for (ShopCatalog.Product product : products) { %>
+                <% for (Product product : products) { %>
                     <article class="card">
                         <div class="thumb"></div>
                         <h3><%= product.getName() %></h3>
