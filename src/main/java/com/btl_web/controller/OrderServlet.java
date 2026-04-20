@@ -1,5 +1,6 @@
 package com.btl_web.controller;
 
+import com.btl_web.dao.OrderStoreDAO;
 import com.btl_web.dao.UserDAO;
 import com.btl_web.model.OrderStore;
 import com.btl_web.model.User;
@@ -29,7 +30,7 @@ public class OrderServlet extends HttpServlet {
         }
 
         User latestUser = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
-        List<OrderStore.Order> orders = OrderStore.findByUsername(getServletContext(), currentUser.getUsername());
+        List<OrderStore.Order> orders = OrderStoreDAO.findByUsername(getServletContext(), currentUser.getUsername());
 
         request.setAttribute("profileUser", latestUser);
         request.setAttribute("orders", orders);
