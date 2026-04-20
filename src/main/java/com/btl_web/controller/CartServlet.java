@@ -1,5 +1,6 @@
 package com.btl_web.controller;
 
+import com.btl_web.dao.OrderStoreDAO;
 import com.btl_web.dao.ProductDAO;
 import com.btl_web.dao.UserDAO;
 import com.btl_web.model.CartStore;
@@ -182,7 +183,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        OrderStore.createOrder(getServletContext(), latestUser, lines, totalForLines(lines));
+        OrderStoreDAO.createOrder(getServletContext(), latestUser, lines, totalForLines(lines));
 
         CartStore.removeItems(getServletContext(), currentUser.getUsername(), new ArrayList<>(selectedItems.keySet()));
 
