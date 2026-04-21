@@ -13,7 +13,7 @@ import java.io.IOException;
 @WebServlet(urlPatterns = { "/auth/login", "/auth/register", "/auth/logout" })
 public class AuthServlet extends HttpServlet {
     private UserDAO userDAO = new UserDAO();
-           
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -75,6 +75,14 @@ public class AuthServlet extends HttpServlet {
         HttpSession session = request.getSession();
         session.setAttribute("currentUser", user);
         session.setAttribute("authSuccess", "Đăng nhập thành công. Bắt đầu mua sắm nhé!");
+        if (userDAO.isCompanyOwner(user)) {
+            response.sendRedirect(request.getContextPath() + "/company/dashboard");
+            return;
+        }
+        if (userDAO.isBranchOwner(user)) {
+            response.sendRedirect(request.getContextPath() + "/branch/dashboard");
+            return;
+        }
         response.sendRedirect(request.getContextPath() + "/shop");
     }
 

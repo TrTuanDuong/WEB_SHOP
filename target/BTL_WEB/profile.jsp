@@ -299,6 +299,11 @@
     </div>
     <div class="logo">Linen Lab | Trang cá nhân</div>
     <div class="links">
+        <% if (currentUser.isCompanyOwner()) { %>
+            <a class="link-btn" href="<%= request.getContextPath() %>/company/dashboard">Dashboard công ty</a>
+        <% } else if (currentUser.isBranchOwner()) { %>
+            <a class="link-btn" href="<%= request.getContextPath() %>/branch/dashboard">Dashboard chi nhánh</a>
+        <% } %>
         <a class="link-btn" href="<%= request.getContextPath() %>/shop">Về shop</a>
         <a class="link-btn" href="<%= request.getContextPath() %>/cart">Giỏ hàng</a>
         <a class="link-btn" href="<%= request.getContextPath() %>/orders">Đơn hàng</a>
@@ -311,6 +316,13 @@
 
 <div class="shell">
     <section class="card">
+        <h2>Hạng thành viên</h2>
+        <p class="desc">
+            Hạng hiện tại: <strong><%= profileUser.getMembershipTier() %></strong> |
+            Chi tiêu 6 tháng: <strong><%= profileUser.getSpendingLast6Months().toPlainString() %> VND</strong> |
+            Ưu đãi hiện tại: <strong><%= profileUser.getMembershipDiscountRate().multiply(new java.math.BigDecimal("100")).stripTrailingZeros().toPlainString() %>%</strong>
+        </p>
+
         <h2>Thông tin cá nhân cố định</h2>
         <p class="desc">Bắt buộc trước khi đặt hàng. Email và số điện thoại là duy nhất giữa các tài khoản.</p>
 

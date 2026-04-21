@@ -154,6 +154,11 @@
 <div class="topbar">
     <div class="logo">Linen Lab | Đơn hàng</div>
     <div class="links">
+        <% if (currentUser.isCompanyOwner()) { %>
+            <a class="link-btn" href="<%= request.getContextPath() %>/company/dashboard">Dashboard công ty</a>
+        <% } else if (currentUser.isBranchOwner()) { %>
+            <a class="link-btn" href="<%= request.getContextPath() %>/branch/dashboard">Dashboard chi nhánh</a>
+        <% } %>
         <a class="link-btn" href="<%= request.getContextPath() %>/cart">Giỏ hàng</a>
         <a class="link-btn" href="<%= request.getContextPath() %>/shop">Về shop</a>
         <a class="link-btn" href="<%= request.getContextPath() %>/profile">Trang cá nhân</a>
@@ -181,6 +186,7 @@
                     <div>
                         <div class="title">Mã đơn: <%= order.getId() %></div>
                         <div class="meta">Khách: <%= order.getCustomerName() %> | Ngày đặt: <%= order.getCreatedAt() %></div>
+                        <div class="meta">Chi nhánh xử lý: <%= order.getBranchId() == null ? "" : order.getBranchId() %></div>
                         <div class="meta">Giao tới: <%= order.getShippingAddress() %></div>
                     </div>
                     <div>
@@ -210,7 +216,10 @@
                     <% } %>
                     </tbody>
                 </table>
-                <div class="meta" style="margin-top: 10px; font-weight: 700;">Tổng đơn: <%= order.getTotal().toPlainString() %> VND</div>
+                <div class="meta" style="margin-top: 10px;">Hạng thành viên lúc mua: <strong><%= order.getMemberTierSnapshot() %></strong></div>
+                <div class="meta">Tạm tính: <%= order.getSubtotal().toPlainString() %> VND</div>
+                <div class="meta">Giảm giá (<%= order.getDiscountRate().multiply(new java.math.BigDecimal("100")).stripTrailingZeros().toPlainString() %>%): -<%= order.getDiscountAmount().toPlainString() %> VND</div>
+                <div class="meta" style="font-weight: 700;">Tổng đơn: <%= order.getTotal().toPlainString() %> VND</div>
             </div>
         <% } %>
     <% } %>

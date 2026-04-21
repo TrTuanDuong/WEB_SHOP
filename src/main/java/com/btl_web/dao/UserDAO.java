@@ -5,16 +5,32 @@ import com.btl_web.model.DbSupport;
 import com.btl_web.model.User;
 
 import javax.servlet.ServletContext;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public final class UserDAO {
+    private static final String USER_DETAIL_SQL = "SELECT u.username, u.full_name, u.password, u.age, u.gender, u.email, u.phone, u.base_address, "
+            + "u.default_address_id, u.branch_id, COALESCE(b.branch_name, '') AS branch_name, "
+            + "r.role_code, r.role_name, "
+            + "COALESCE(sp.total_spending_6m, 0) AS total_spending_6m "
+            + "FROM users u "
+            + "JOIN roles r ON r.id = u.role_id "
+            + "LEFT JOIN branches b ON b.branch_id = u.branch_id "
+            + "LEFT JOIN ( "
+            + "    SELECT username, COALESCE(SUM(total), 0) AS total_spending_6m "
+            + "    FROM orders "
+            + "    WHERE created_at >= NOW() - INTERVAL '6 months' "
+            + "      AND status NOT IN ('DA_HUY', 'DA_TRA_HANG') "
+            + "    GROUP BY username "
+            + ") sp ON sp.username = u.username "
+            + "WHERE u.username = ?";
+
     public static boolean register(ServletContext context, String username, String fullName, String password) {
-        String sql = "INSERT INTO users (username, full_name, password, role_id) "
-                + "SELECT ?, ?, ?, id FROM roles WHERE role_code = 'CUSTOMER'";
+        String sql = "INSERT INTO users (username, full_name, password, role_id, branch_id) "
+                + "SELECT ?, ?, ?, id, 'HQ' FROM roles WHERE role_code = 'CUSTOMER'";
         try (Connection connection = DbSupport.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, username);
@@ -30,12 +46,8 @@ public final class UserDAO {
     }
 
     public static User login(ServletContext context, String username, String password) {
-        String sql = "SELECT u.username, u.full_name, u.password, u.age, u.gender, u.email, u.phone, u.base_address, "
-                + "u.default_address_id, r.role_code, r.role_name "
-                + "FROM users u JOIN roles r ON r.id = u.role_id "
-                + "WHERE u.username = ?";
         try (Connection connection = DbSupport.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(USER_DETAIL_SQL)) {
             statement.setString(1, username);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
@@ -54,12 +66,8 @@ public final class UserDAO {
     }
 
     public static User findByUsername(ServletContext context, String username) {
-        String sql = "SELECT u.username, u.full_name, u.password, u.age, u.gender, u.email, u.phone, u.base_address, "
-                + "u.default_address_id, r.role_code, r.role_name "
-                + "FROM users u JOIN roles r ON r.id = u.role_id "
-                + "WHERE u.username = ?";
         try (Connection connection = DbSupport.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(USER_DETAIL_SQL)) {
             statement.setString(1, username);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
@@ -194,7 +202,15 @@ public final class UserDAO {
     }
 
     public static boolean isAdmin(User user) {
-        return user != null && user.isAdmin();
+        return isCompanyOwner(user);
+    }
+
+    public static boolean isCompanyOwner(User user) {
+        return user != null && user.isCompanyOwner();
+    }
+
+    public static boolean isBranchOwner(User user) {
+        return user != null && user.isBranchOwner();
     }
 
     private static User mapUser(ResultSet resultSet) throws SQLException {
@@ -212,7 +228,45 @@ public final class UserDAO {
         user.setPhone(defaultString(resultSet.getString("phone")));
         user.setBaseAddress(defaultString(resultSet.getString("base_address")));
         user.setDefaultAddressId(defaultString(resultSet.getString("default_address_id")));
+        user.setBranchId(defaultString(resultSet.getString("branch_id")));
+        user.setBranchName(defaultString(resultSet.getString("branch_name")));
+
+        BigDecimal spending = resultSet.getBigDecimal("total_spending_6m");
+        if (spending == null) {
+            spending = BigDecimal.ZERO;
+        }
+        user.setSpendingLast6Months(spending);
+
+        String tier = membershipTierFor(spending);
+        user.setMembershipTier(tier);
+        user.setMembershipDiscountRate(discountRateForTier(tier));
         return user;
+    }
+
+    private static String membershipTierFor(BigDecimal spending6m) {
+        if (spending6m.compareTo(new BigDecimal("15000000")) >= 0) {
+            return "DIAMOND";
+        }
+        if (spending6m.compareTo(new BigDecimal("10000000")) >= 0) {
+            return "GOLD";
+        }
+        if (spending6m.compareTo(new BigDecimal("5000000")) >= 0) {
+            return "SILVER";
+        }
+        return "STANDARD";
+    }
+
+    private static BigDecimal discountRateForTier(String tier) {
+        if ("DIAMOND".equalsIgnoreCase(tier)) {
+            return new BigDecimal("0.12");
+        }
+        if ("GOLD".equalsIgnoreCase(tier)) {
+            return new BigDecimal("0.07");
+        }
+        if ("SILVER".equalsIgnoreCase(tier)) {
+            return new BigDecimal("0.03");
+        }
+        return BigDecimal.ZERO;
     }
 
     private static boolean isUniqueViolation(SQLException exception) {
@@ -228,7 +282,8 @@ public final class UserDAO {
     }
 
     private static OperationResult convertAddressResult(AddressDAO.OperationResult result) {
-        return result.isSuccess() ? OperationResult.success(result.getMessage()) : OperationResult.fail(result.getMessage());
+        return result.isSuccess() ? OperationResult.success(result.getMessage())
+                : OperationResult.fail(result.getMessage());
     }
 
     public static final class OperationResult {

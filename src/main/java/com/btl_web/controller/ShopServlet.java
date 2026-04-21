@@ -5,7 +5,6 @@ import com.btl_web.model.CartStore;
 import com.btl_web.model.Product;
 import com.btl_web.model.User;
 
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -21,6 +20,7 @@ import java.util.List;
 public class ShopServlet extends HttpServlet {
     private static final int PAGE_SIZE = 40;
     private ProductDAO productDAO = new ProductDAO();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -47,7 +47,10 @@ public class ShopServlet extends HttpServlet {
                 filtered.add(product);
             }
         } catch (SQLException ex) {
-            System.getLogger(ShopServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            System.getLogger(ShopServlet.class.getName()).log(
+                    System.Logger.Level.ERROR,
+                    "Failed to load products from database",
+                    ex);
         }
 
         int totalItems = filtered.size();
@@ -101,7 +104,7 @@ public class ShopServlet extends HttpServlet {
         }
         return product.getSegment().equalsIgnoreCase(mapSegment(segment));
     }
-    
+
     private boolean matchesKeyword(Product product, String keyword) {
         if (keyword.isEmpty()) {
             return true;

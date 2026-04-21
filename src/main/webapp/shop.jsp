@@ -381,13 +381,18 @@
             <a class="link-btn primary" href="<%= request.getContextPath() %>/auth/register">Đăng ký</a>
         <% } else { %>
             <span class="badge">Xin chào, <%= currentUser.getFullName() %></span>
-            <% if (currentUser.isAdmin()) { %>
+            <% if (currentUser.isCompanyOwner()) { %>
+                <a class="link-btn" href="<%= request.getContextPath() %>/company/dashboard">Dashboard công ty</a>
                 <a class="link-btn primary" href="<%= request.getContextPath() %>/addproducts">Thêm sản phẩm</a>
+            <% } else if (currentUser.isBranchOwner()) { %>
+                <a class="link-btn" href="<%= request.getContextPath() %>/branch/dashboard">Dashboard chi nhánh</a>
+            <% } else { %>
+                <span class="badge">Hạng <%= currentUser.getMembershipTier() %></span>
             <% } %>
             <a class="link-btn" href="<%= request.getContextPath() %>/profile">Trang cá nhân</a>
             <a class="link-btn" href="<%= request.getContextPath() %>/cart">Giỏ hàng(<%= cartCount %>)</a>
             <a class="link-btn" href="<%= request.getContextPath() %>/orders">Đơn hàng</a>
-            <% if (currentUser.isAdmin()) { %>
+            <% if (currentUser.isCompanyOwner()) { %>
                 <a class="link-btn" href="<%= request.getContextPath() %>/admin-contact">Yêu cầu</a>
             <% } else { %>
                 <a class="link-btn" href="<%= request.getContextPath() %>/admin-contact">Liên hệ admin</a>

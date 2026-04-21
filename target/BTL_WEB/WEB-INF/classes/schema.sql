@@ -8,14 +8,24 @@ CREATE TABLE IF NOT EXISTS clothing_product (
     stock_quantity INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS branches (
+    branch_id TEXT PRIMARY KEY,
+    branch_code TEXT NOT NULL UNIQUE,
+    branch_name TEXT NOT NULL,
+    branch_address TEXT NOT NULL,
+    owner_username TEXT UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS shop_product (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
+    branch_id TEXT,
     group_name TEXT NOT NULL,
     segment TEXT NOT NULL,
     size TEXT NOT NULL,
     color TEXT NOT NULL,
-    price NUMERIC(14, 2) NOT NULL
+    price NUMERIC(14, 2) NOT NULL,
+    stock_quantity INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS roles (
@@ -29,6 +39,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT NOT NULL,
     password TEXT NOT NULL,
     role_id SMALLINT NOT NULL REFERENCES roles(id),
+    branch_id TEXT,
     age INTEGER,
     gender TEXT,
     email TEXT UNIQUE,
@@ -54,13 +65,21 @@ CREATE TABLE IF NOT EXISTS user_shipping_address (
 CREATE TABLE IF NOT EXISTS orders (
     order_id TEXT PRIMARY KEY,
     username TEXT NOT NULL REFERENCES users(username) ON DELETE RESTRICT,
+    branch_id TEXT,
     customer_name TEXT NOT NULL,
     shipping_address TEXT NOT NULL,
     status TEXT NOT NULL,
+    subtotal NUMERIC(14, 2) NOT NULL DEFAULT 0,
+    discount_rate NUMERIC(5, 4) NOT NULL DEFAULT 0,
+    discount_amount NUMERIC(14, 2) NOT NULL DEFAULT 0,
+    member_tier_snapshot TEXT NOT NULL DEFAULT 'STANDARD',
     total NUMERIC(14, 2) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK (status IN ('CHO_XAC_NHAN', 'DA_XAC_NHAN', 'DANG_GIAO', 'DA_GIAO', 'DA_HUY', 'DA_TRA_HANG')),
+    CHECK (subtotal >= 0),
+    CHECK (discount_rate >= 0),
+    CHECK (discount_amount >= 0),
     CHECK (total >= 0)
 );
 
@@ -96,11 +115,23 @@ CREATE TABLE IF NOT EXISTS cart_items (
     CHECK (quantity > 0)
 );
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS branch_id TEXT;
+ALTER TABLE shop_product ADD COLUMN IF NOT EXISTS branch_id TEXT;
+ALTER TABLE shop_product ADD COLUMN IF NOT EXISTS stock_quantity INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS branch_id TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal NUMERIC(14, 2) NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_rate NUMERIC(5, 4) NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(14, 2) NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS member_tier_snapshot TEXT NOT NULL DEFAULT 'STANDARD';
+
 CREATE INDEX IF NOT EXISTS idx_user_shipping_address_username
     ON user_shipping_address(username);
 
 CREATE INDEX IF NOT EXISTS idx_orders_username
     ON orders(username);
+
+CREATE INDEX IF NOT EXISTS idx_orders_branch_id
+    ON orders(branch_id);
 
 CREATE INDEX IF NOT EXISTS idx_order_items_product_id
     ON order_items(product_id);
@@ -114,21 +145,58 @@ CREATE INDEX IF NOT EXISTS idx_contact_requests_created_at
 CREATE INDEX IF NOT EXISTS idx_cart_items_username
     ON cart_items(username);
 
+CREATE INDEX IF NOT EXISTS idx_shop_product_branch_id
+    ON shop_product(branch_id);
+
 INSERT INTO roles (role_code, role_name)
-VALUES ('ADMIN', 'Administrator'), ('CUSTOMER', 'Customer')
+VALUES
+    ('ADMIN', 'Administrator'),
+    ('COMPANY_OWNER', 'Company Owner'),
+    ('BRANCH_OWNER', 'Branch Owner'),
+    ('CUSTOMER', 'Customer')
 ON CONFLICT (role_code) DO NOTHING;
 
-INSERT INTO users (username, full_name, password, role_id)
-SELECT 'admin', 'Quản trị viên', 'admin123', id
+INSERT INTO branches (branch_id, branch_code, branch_name, branch_address)
+VALUES
+    ('HQ', 'HQ', 'Trụ sở chính', 'Hà Nội'),
+    ('CN_HN', 'CN_HN', 'Chi nhánh Hà Nội', 'Quận Cầu Giấy, Hà Nội'),
+    ('CN_HCM', 'CN_HCM', 'Chi nhánh Hồ Chí Minh', 'Quận 1, Hồ Chí Minh')
+ON CONFLICT (branch_id) DO NOTHING;
+
+INSERT INTO users (username, full_name, password, role_id, branch_id)
+SELECT 'admin', 'Chủ công ty', 'admin123', id, 'HQ'
 FROM roles
-WHERE role_code = 'ADMIN'
+WHERE role_code = 'COMPANY_OWNER'
 ON CONFLICT (username) DO NOTHING;
 
-INSERT INTO users (username, full_name, password, role_id)
-SELECT 'demo', 'Khách Demo', '123456', id
+INSERT INTO users (username, full_name, password, role_id, branch_id)
+SELECT 'branch_hn', 'Chủ chi nhánh Hà Nội', 'branch123', id, 'CN_HN'
+FROM roles
+WHERE role_code = 'BRANCH_OWNER'
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO users (username, full_name, password, role_id, branch_id)
+SELECT 'branch_hcm', 'Chủ chi nhánh Hồ Chí Minh', 'branch123', id, 'CN_HCM'
+FROM roles
+WHERE role_code = 'BRANCH_OWNER'
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO users (username, full_name, password, role_id, branch_id)
+SELECT 'demo', 'Khách Demo', '123456', id, 'HQ'
 FROM roles
 WHERE role_code = 'CUSTOMER'
 ON CONFLICT (username) DO NOTHING;
+
+UPDATE users
+SET role_id = (SELECT id FROM roles WHERE role_code = 'COMPANY_OWNER')
+WHERE username = 'admin';
+
+UPDATE users
+SET branch_id = COALESCE(branch_id, 'HQ')
+WHERE role_id IN (SELECT id FROM roles WHERE role_code IN ('CUSTOMER', 'BRANCH_OWNER'));
+
+UPDATE branches SET owner_username = 'branch_hn' WHERE branch_id = 'CN_HN';
+UPDATE branches SET owner_username = 'branch_hcm' WHERE branch_id = 'CN_HCM';
 
 WITH group_defs AS (
     SELECT *
@@ -151,11 +219,40 @@ WITH group_defs AS (
         gd.segment,
         (ARRAY['S', 'M', 'L', 'XL'])[((n - 1) % 4) + 1] AS size,
         (ARRAY['Đen', 'Trắng', 'Xanh', 'Be', 'Nâu', 'Hồng'])[((n - 1) % 6) + 1] AS color,
-        (179000 + ((n - 1) % 9) * 35000)::NUMERIC(14, 2) AS price
+        (179000 + ((n - 1) % 9) * 35000)::NUMERIC(14, 2) AS price,
+        CASE
+            WHEN (n % 3) = 0 THEN 'HQ'
+            WHEN (n % 3) = 1 THEN 'CN_HN'
+            ELSE 'CN_HCM'
+        END AS branch_id,
+        (40 + (n % 30))::INTEGER AS stock_quantity
     FROM group_defs gd
     CROSS JOIN generate_series(1, 18) AS n
 )
-INSERT INTO shop_product (id, name, group_name, segment, size, color, price)
-SELECT id, name, group_name, segment, size, color, price
+INSERT INTO shop_product (id, name, branch_id, group_name, segment, size, color, price, stock_quantity)
+SELECT id, name, branch_id, group_name, segment, size, color, price, stock_quantity
 FROM generated
 WHERE NOT EXISTS (SELECT 1 FROM shop_product);
+
+UPDATE shop_product
+SET branch_id = CASE
+        WHEN RIGHT(id, 1) IN ('0', '1', '2', '3') THEN 'HQ'
+        WHEN RIGHT(id, 1) IN ('4', '5', '6') THEN 'CN_HN'
+        ELSE 'CN_HCM'
+    END
+WHERE branch_id IS NULL OR TRIM(branch_id) = '';
+
+UPDATE shop_product
+SET stock_quantity = CASE
+        WHEN stock_quantity <= 0 THEN 40 + (ASCII(RIGHT(id, 1)) % 35)
+        ELSE stock_quantity
+    END;
+
+UPDATE orders o
+SET branch_id = COALESCE(o.branch_id, u.branch_id, 'HQ')
+FROM users u
+WHERE u.username = o.username;
+
+UPDATE orders
+SET subtotal = CASE WHEN subtotal <= 0 THEN total ELSE subtotal END,
+    member_tier_snapshot = CASE WHEN member_tier_snapshot IS NULL OR TRIM(member_tier_snapshot) = '' THEN 'STANDARD' ELSE member_tier_snapshot END;
