@@ -4,6 +4,7 @@ com\btl_web\controller\AdminContactServlet$ContactRequest.class
 com\btl_web\model\ClothingStore$ClothingItem.class
 com\btl_web\model\OrderStore$OrderLine.class
 com\btl_web\model\Address.class
+com\btl_web\dao\OrderStoreDAO.class
 com\btl_web\controller\ShopServlet.class
 com\btl_web\controller\AddProductsServlet.class
 com\btl_web\controller\AuthServlet.class

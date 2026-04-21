@@ -9,6 +9,7 @@ D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\Orde
 D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ProfileServlet.java
 D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ShopServlet.java
 D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\AddressDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\OrderStoreDAO.java
 D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\ProductDAO.java
 D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\UserDAO.java
 D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\Address.java

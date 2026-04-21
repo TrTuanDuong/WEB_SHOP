@@ -23,7 +23,7 @@ public class ProductDAO {
     private volatile boolean schemaInitialized = false;
     public List<Product> all(ServletContext context) throws SQLException {
         initSchemaIfNeeded();
-        String sql = "SELECT id, name, group_name, segment, size, color, price "
+    String sql = "SELECT id, name, group_name, segment, size, color, price, image "
                 + "FROM shop_product ORDER BY id";
         List<Product> products = new ArrayList<>();
         Connection con = DbSupport.getConnection();
@@ -37,14 +37,15 @@ public class ProductDAO {
                     resultSet.getString("segment"),
                     resultSet.getString("size"),
                     resultSet.getString("color"),
-                    resultSet.getBigDecimal("price")));
+                    resultSet.getBigDecimal("price"),
+                    resultSet.getString("image")));
         }
         return Collections.unmodifiableList(products);
     }
 
     public Product findById(ServletContext context, String id) throws SQLException {
         initSchemaIfNeeded();
-        String sql = "SELECT id, name, group_name, segment, size, color, price "
+        String sql = "SELECT id, name, group_name, segment, size, color, price, image "
                 + "FROM shop_product WHERE id = ?";
         try (Connection connection = DbSupport.getConnection(); 
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -60,7 +61,8 @@ public class ProductDAO {
                         resultSet.getString("segment"),
                         resultSet.getString("size"),
                         resultSet.getString("color"),
-                        resultSet.getBigDecimal("price"));
+                        resultSet.getBigDecimal("price"),
+                        resultSet.getString("image"));
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Không thể tìm sản phẩm theo mã từ CSDL.", e);
@@ -83,7 +85,8 @@ public class ProductDAO {
                 + "segment TEXT NOT NULL,"
                 + "size TEXT NOT NULL,"
                 + "color TEXT NOT NULL,"
-                + "price NUMERIC(14, 2) NOT NULL)";
+                + "price NUMERIC(14, 2) NOT NULL,"
+                + "image TEXT)";
 
         Connection connection = DbSupport.getConnection();
         PreparedStatement statement = connection.prepareStatement(createTableSql);
