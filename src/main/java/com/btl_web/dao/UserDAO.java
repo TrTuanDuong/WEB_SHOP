@@ -10,6 +10,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public final class UserDAO {
     private static final String USER_DETAIL_SQL = "SELECT u.username, u.full_name, u.password, u.age, u.gender, u.email, u.phone, u.base_address, "
@@ -213,6 +216,106 @@ public final class UserDAO {
         return user != null && user.isBranchOwner();
     }
 
+    public static OperationResult createBranchOwnerAccount(
+            ServletContext context,
+            String branchId,
+            String branchName,
+            String branchAddress,
+            String ownerUsername,
+            String ownerFullName,
+            String ownerPassword) {
+        String normalizedBranchId = defaultString(branchId).trim().toUpperCase();
+        String normalizedBranchName = defaultString(branchName).trim();
+        String normalizedBranchAddress = defaultString(branchAddress).trim();
+        String normalizedOwnerUsername = defaultString(ownerUsername).trim().toLowerCase();
+        String normalizedOwnerFullName = defaultString(ownerFullName).trim();
+        String normalizedOwnerPassword = defaultString(ownerPassword).trim();
+
+        if (normalizedBranchId.isEmpty() || normalizedBranchName.isEmpty() || normalizedBranchAddress.isEmpty()
+                || normalizedOwnerUsername.isEmpty() || normalizedOwnerFullName.isEmpty()
+                || normalizedOwnerPassword.isEmpty()) {
+            return OperationResult.fail("Vui lòng nhập đầy đủ thông tin chi nhánh và tài khoản chủ chi nhánh.");
+        }
+
+        if (normalizedOwnerUsername.length() < 4) {
+            return OperationResult.fail("Tên đăng nhập chủ chi nhánh phải từ 4 ký tự trở lên.");
+        }
+
+        if (normalizedOwnerPassword.length() < 6) {
+            return OperationResult.fail("Mật khẩu chủ chi nhánh phải từ 6 ký tự trở lên.");
+        }
+
+        String insertBranchSql = "INSERT INTO branches (branch_id, branch_code, branch_name, branch_address, owner_username) "
+                + "VALUES (?, ?, ?, ?, ?)";
+        String insertOwnerSql = "INSERT INTO users (username, full_name, password, role_id, branch_id) "
+                + "SELECT ?, ?, ?, id, ? FROM roles WHERE role_code = 'BRANCH_OWNER'";
+
+        try (Connection connection = DbSupport.getConnection()) {
+            boolean originalAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement branchStatement = connection.prepareStatement(insertBranchSql)) {
+                    branchStatement.setString(1, normalizedBranchId);
+                    branchStatement.setString(2, normalizedBranchId);
+                    branchStatement.setString(3, normalizedBranchName);
+                    branchStatement.setString(4, normalizedBranchAddress);
+                    branchStatement.setString(5, normalizedOwnerUsername);
+                    branchStatement.executeUpdate();
+                }
+
+                try (PreparedStatement ownerStatement = connection.prepareStatement(insertOwnerSql)) {
+                    ownerStatement.setString(1, normalizedOwnerUsername);
+                    ownerStatement.setString(2, normalizedOwnerFullName);
+                    ownerStatement.setString(3, normalizedOwnerPassword);
+                    ownerStatement.setString(4, normalizedBranchId);
+                    int inserted = ownerStatement.executeUpdate();
+                    if (inserted == 0) {
+                        throw new SQLException("Không tìm thấy role BRANCH_OWNER để tạo tài khoản chi nhánh.");
+                    }
+                }
+
+                connection.commit();
+                return OperationResult.success("Đã tạo chi nhánh " + normalizedBranchName
+                        + " và tài khoản đăng nhập " + normalizedOwnerUsername + ".");
+            } catch (SQLException ex) {
+                connection.rollback();
+                if (isUniqueViolation(ex)) {
+                    return OperationResult.fail(
+                            "Mã chi nhánh hoặc tài khoản chủ chi nhánh đã tồn tại. Vui lòng dùng giá trị khác.");
+                }
+                throw ex;
+            } finally {
+                connection.setAutoCommit(originalAutoCommit);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tạo chi nhánh và tài khoản chủ chi nhánh trong CSDL.", e);
+        }
+    }
+
+    public static List<BranchOwnerAccount> listBranchOwnerAccounts(ServletContext context) {
+        String sql = "SELECT b.branch_id, b.branch_name, COALESCE(u.username, b.owner_username) AS owner_username "
+                + "FROM branches b "
+                + "LEFT JOIN users u ON u.username = b.owner_username "
+                + "LEFT JOIN roles r ON r.id = u.role_id "
+                + "WHERE u.username IS NULL OR r.role_code = 'BRANCH_OWNER' "
+                + "ORDER BY b.branch_name";
+
+        List<BranchOwnerAccount> accounts = new ArrayList<>();
+        try (Connection connection = DbSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                accounts.add(new BranchOwnerAccount(
+                        defaultString(resultSet.getString("branch_id")),
+                        defaultString(resultSet.getString("branch_name")),
+                        defaultString(resultSet.getString("owner_username"))));
+            }
+            return Collections.unmodifiableList(accounts);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải danh sách tài khoản chi nhánh.", e);
+        }
+    }
+
     private static User mapUser(ResultSet resultSet) throws SQLException {
         User user = new User(
                 resultSet.getString("username"),
@@ -309,6 +412,30 @@ public final class UserDAO {
 
         public String getMessage() {
             return message;
+        }
+    }
+
+    public static final class BranchOwnerAccount {
+        private final String branchId;
+        private final String branchName;
+        private final String ownerUsername;
+
+        public BranchOwnerAccount(String branchId, String branchName, String ownerUsername) {
+            this.branchId = branchId;
+            this.branchName = branchName;
+            this.ownerUsername = ownerUsername;
+        }
+
+        public String getBranchId() {
+            return branchId;
+        }
+
+        public String getBranchName() {
+            return branchName;
+        }
+
+        public String getOwnerUsername() {
+            return ownerUsername;
         }
     }
 }

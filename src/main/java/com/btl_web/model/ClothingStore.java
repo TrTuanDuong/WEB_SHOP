@@ -84,6 +84,50 @@ public final class ClothingStore {
         }
     }
 
+    public static void update(String productCode, String name, String category, String size, String color, BigDecimal price, int stockQuantity) {
+        initSchemaIfNeeded();
+        String sql = "UPDATE clothing_product SET name = ?, category = ?, size = ?, color = ?, price = ?, stock_quantity = ? WHERE LOWER(product_code) = LOWER(?)";
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name);
+            statement.setString(2, category);
+            statement.setString(3, size);
+            statement.setString(4, color);
+            statement.setBigDecimal(5, price);
+            statement.setInt(6, stockQuantity);
+            statement.setString(7, productCode);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể cập nhật sản phẩm trong CSDL.", e);
+        }
+    }
+
+    public static void delete(String productCode) {
+        initSchemaIfNeeded();
+        String sql = "DELETE FROM clothing_product WHERE LOWER(product_code) = LOWER(?)";
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, productCode);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể xoá sản phẩm khỏi CSDL.", e);
+        }
+    }
+
+    public static ClothingItem findByCode(String productCode) {
+        initSchemaIfNeeded();
+        String sql = "SELECT product_code, name, category, size, color, price, stock_quantity FROM clothing_product WHERE LOWER(product_code) = LOWER(?)";
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, productCode);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new ClothingItem(resultSet.getString("product_code"), resultSet.getString("name"), resultSet.getString("category"), resultSet.getString("size"), resultSet.getString("color"), resultSet.getBigDecimal("price"), resultSet.getInt("stock_quantity"));
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tìm sản phẩm trong CSDL.", e);
+        }
+    }
+
     private static synchronized void initSchemaIfNeeded() {
         if (schemaInitialized) {
             return;

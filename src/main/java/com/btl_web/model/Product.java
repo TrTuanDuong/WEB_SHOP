@@ -18,8 +18,8 @@ public class Product {
     private String size;
     private String color;
     private BigDecimal price;
-
-    public Product(String id, String name, String group, String segment, String size, String color, BigDecimal price) {
+    private String image;
+    public Product(String id, String name, String group, String segment, String size, String color, BigDecimal price, String image) {
         this.id = id;
         this.name = name;
         this.group = group;
@@ -27,6 +27,15 @@ public class Product {
         this.size = size;
         this.color = color;
         this.price = price;
+        this.image = image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getImage() {
+        return image;
     }
 
     public String getId() {

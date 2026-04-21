@@ -1,23 +1,26 @@
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/AddProductsServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/AdminContactServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/AuthServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/BusinessDashboardServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/CartServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/ClothingBackServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/ClothingConfirmServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/ClothingPreviewServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/OrderServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/ProfileServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/controller/ShopServlet.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/dao/AddressDAO.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/dao/BusinessReportDAO.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/dao/OrderStoreDAO.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/dao/ProductDAO.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/dao/UserDAO.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/model/Address.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/model/CartStore.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/model/ClothingStore.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/model/DbSupport.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/model/OrderStore.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/model/Product.java
-/Users/trantuanduong/WEB_SHOP/src/main/java/com/btl_web/model/User.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\AddProductsServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\AdminContactServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\AuthServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\BusinessDashboardServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\CartServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingBackServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingConfirmServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingDeleteServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingPreviewServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ClothingUpdateServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\OrderServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ProductApiServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ProfileServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\controller\ShopServlet.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\AddressDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\BusinessReportDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\OrderStoreDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\ProductDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\dao\UserDAO.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\Address.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\CartStore.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\ClothingStore.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\DbSupport.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\OrderStore.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\Product.java
+D:\SERVLET VÀ JSP\New folder\WEB_SHOP\src\main\java\com\btl_web\model\User.java

@@ -170,13 +170,31 @@ WHERE role_code = 'COMPANY_OWNER'
 ON CONFLICT (username) DO NOTHING;
 
 INSERT INTO users (username, full_name, password, role_id, branch_id)
+SELECT 'company_owner', 'Chủ hãng', 'owner123', id, 'HQ'
+FROM roles
+WHERE role_code = 'COMPANY_OWNER'
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO users (username, full_name, password, role_id, branch_id)
 SELECT 'branch_hn', 'Chủ chi nhánh Hà Nội', 'branch123', id, 'CN_HN'
 FROM roles
 WHERE role_code = 'BRANCH_OWNER'
 ON CONFLICT (username) DO NOTHING;
 
 INSERT INTO users (username, full_name, password, role_id, branch_id)
+SELECT 'branch_owner_hn', 'Chủ chi nhánh Hà Nội (mẫu)', 'branch123', id, 'CN_HN'
+FROM roles
+WHERE role_code = 'BRANCH_OWNER'
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO users (username, full_name, password, role_id, branch_id)
 SELECT 'branch_hcm', 'Chủ chi nhánh Hồ Chí Minh', 'branch123', id, 'CN_HCM'
+FROM roles
+WHERE role_code = 'BRANCH_OWNER'
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO users (username, full_name, password, role_id, branch_id)
+SELECT 'branch_owner_hcm', 'Chủ chi nhánh Hồ Chí Minh (mẫu)', 'branch123', id, 'CN_HCM'
 FROM roles
 WHERE role_code = 'BRANCH_OWNER'
 ON CONFLICT (username) DO NOTHING;

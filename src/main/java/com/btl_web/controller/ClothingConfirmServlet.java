@@ -1,6 +1,8 @@
 package com.btl_web.controller;
 
+import com.btl_web.dao.UserDAO;
 import com.btl_web.model.ClothingStore;
+import com.btl_web.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -13,12 +15,21 @@ import java.math.BigDecimal;
 
 @WebServlet("/clothes/confirm")
 public class ClothingConfirmServlet extends HttpServlet {
+    private final UserDAO userDAO = new UserDAO();
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
         HttpSession session = request.getSession();
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (!userDAO.isAdmin(currentUser)) {
+            session.setAttribute("authError", "Chỉ tài khoản admin mới được thao tác sản phẩm.");
+            response.sendRedirect(request.getContextPath() + "/auth/login");
+            return;
+        }
+
         String productCode = normalize((String) session.getAttribute("draftProductCode"));
         String name = normalize((String) session.getAttribute("draftName"));
         String category = normalize((String) session.getAttribute("draftCategory"));

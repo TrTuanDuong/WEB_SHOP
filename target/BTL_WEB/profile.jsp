@@ -19,6 +19,11 @@
     String profileError = (String) session.getAttribute("profileError");
     String profileSuccess = (String) session.getAttribute("profileSuccess");
     boolean profileLocked = userDAO.isFixedProfileLocked(profileUser);
+    String membershipTierLabel = "Vô hạng";
+    String profileTier = profileUser.getMembershipTier() == null ? "" : profileUser.getMembershipTier().trim();
+    if (!profileTier.isEmpty() && !"STANDARD".equalsIgnoreCase(profileTier)) {
+        membershipTierLabel = profileTier;
+    }
     session.removeAttribute("profileError");
     session.removeAttribute("profileSuccess");
 %>
@@ -303,6 +308,8 @@
             <a class="link-btn" href="<%= request.getContextPath() %>/company/dashboard">Dashboard công ty</a>
         <% } else if (currentUser.isBranchOwner()) { %>
             <a class="link-btn" href="<%= request.getContextPath() %>/branch/dashboard">Dashboard chi nhánh</a>
+        <% } else { %>
+            <a class="link-btn" href="<%= request.getContextPath() %>/profile">Hạng: <%= membershipTierLabel %></a>
         <% } %>
         <a class="link-btn" href="<%= request.getContextPath() %>/shop">Về shop</a>
         <a class="link-btn" href="<%= request.getContextPath() %>/cart">Giỏ hàng</a>
@@ -318,7 +325,7 @@
     <section class="card">
         <h2>Hạng thành viên</h2>
         <p class="desc">
-            Hạng hiện tại: <strong><%= profileUser.getMembershipTier() %></strong> |
+            Hạng hiện tại: <strong><%= membershipTierLabel %></strong> |
             Chi tiêu 6 tháng: <strong><%= profileUser.getSpendingLast6Months().toPlainString() %> VND</strong> |
             Ưu đãi hiện tại: <strong><%= profileUser.getMembershipDiscountRate().multiply(new java.math.BigDecimal("100")).stripTrailingZeros().toPlainString() %>%</strong>
         </p>

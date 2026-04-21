@@ -2,7 +2,14 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.btl_web.dao.BusinessReportDAO" %>
 <%@ page import="com.btl_web.model.OrderStore" %>
+<%@ page import="com.btl_web.model.User" %>
 <%
+    User currentUser = (User) session.getAttribute("currentUser");
+    if (currentUser == null) {
+        response.sendRedirect(request.getContextPath() + "/auth/login");
+        return;
+    }
+
     BusinessReportDAO.BranchStat stat = (BusinessReportDAO.BranchStat) request.getAttribute("branchStat");
     String branchError = (String) request.getAttribute("branchError");
     @SuppressWarnings("unchecked")
@@ -17,11 +24,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Chủ Chi Nhánh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: "Plus Jakarta Sans", sans-serif; background: #f6f3eb; margin: 0; padding: 16px; color: #22302f; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background: linear-gradient(180deg, #faf8f2 0%, #f1ece2 100%);
+            margin: 0;
+            padding: 12px 16px 24px;
+            color: #22302f;
+        }
         .wrap { max-width: 1200px; margin: 0 auto; }
-        .top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-        .btn { text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid #cfd8d3; background: #fff; color: #234; font-weight: 600; }
+        .topbar {
+            position: sticky;
+            top: 10px;
+            z-index: 20;
+            border: 1px solid #d5e0da;
+            background: rgba(255, 253, 247, 0.92);
+            backdrop-filter: blur(6px);
+            border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(35, 48, 46, 0.08);
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .logo { font-size: 1.12rem; font-weight: 700; }
+        .links { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 6px 10px;
+            border: 1px solid #c9d7d1;
+            background: #f2f8f6;
+            color: #33514e;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .btn {
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid #cfd8d3;
+            background: #fff;
+            color: #234;
+            font-weight: 600;
+            font-size: 0.88rem;
+        }
         .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
         .card { background: #fffdf7; border: 1px solid #dbe4de; border-radius: 14px; padding: 14px; }
         .k { font-size: 0.82rem; color: #607270; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -35,10 +89,13 @@
 </head>
 <body>
 <div class="wrap">
-    <div class="top">
-        <h1>Dashboard Chủ Chi Nhánh</h1>
-        <div>
+    <div class="topbar">
+        <div class="logo">Linen Lab | Dashboard chi nhánh</div>
+        <div class="links">
+            <span class="badge">Xin chào, <%= currentUser.getFullName() %></span>
             <a class="btn" href="<%= request.getContextPath() %>/shop">Về shop</a>
+            <a class="btn" href="<%= request.getContextPath() %>/orders">Đơn hàng</a>
+            <a class="btn" href="<%= request.getContextPath() %>/profile">Trang cá nhân</a>
             <a class="btn" href="<%= request.getContextPath() %>/auth/logout">Đăng xuất</a>
         </div>
     </div>
@@ -75,11 +132,17 @@
                 <tr><td colspan="7">Chưa có đơn hàng.</td></tr>
             <% } else { %>
                 <% for (OrderStore.Order order : orders) { %>
+                    <%
+                        String orderTier = order.getMemberTierSnapshot() == null ? "" : order.getMemberTierSnapshot().trim();
+                        if (orderTier.isEmpty() || "STANDARD".equalsIgnoreCase(orderTier)) {
+                            orderTier = "Vô hạng";
+                        }
+                    %>
                     <tr>
                         <td><%= order.getId() %></td>
                         <td><%= order.getCustomerName() %></td>
                         <td><%= order.getCreatedAt() %></td>
-                        <td><%= order.getMemberTierSnapshot() %></td>
+                        <td><%= orderTier %></td>
                         <td><%= order.getSubtotal().toPlainString() %> VND</td>
                         <td><%= order.getDiscountAmount().toPlainString() %> VND</td>
                         <td><%= order.getTotal().toPlainString() %> VND</td>

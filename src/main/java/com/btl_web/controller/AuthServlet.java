@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet(urlPatterns = { "/auth/login", "/auth/register", "/auth/logout" })
 public class AuthServlet extends HttpServlet {
@@ -27,6 +28,8 @@ public class AuthServlet extends HttpServlet {
         }
 
         if ("/auth/login".equals(path)) {
+            List<UserDAO.BranchOwnerAccount> branchAccounts = UserDAO.listBranchOwnerAccounts(getServletContext());
+            request.setAttribute("branchAccounts", branchAccounts);
             request.getRequestDispatcher("/login.jsp").forward(request, response);
             return;
         }

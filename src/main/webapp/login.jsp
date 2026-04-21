@@ -1,4 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.util.List" %>
+<%@ page import="com.btl_web.dao.UserDAO" %>
 <%
     String authError = (String) request.getAttribute("authError");
     if (authError == null && session.getAttribute("authError") != null) {
@@ -9,6 +11,12 @@
     if (enteredUsername == null) enteredUsername = "";
     String authSuccess = (String) session.getAttribute("authSuccess");
     session.removeAttribute("authSuccess");
+    @SuppressWarnings("unchecked")
+    List<UserDAO.BranchOwnerAccount> branchAccounts =
+            (List<UserDAO.BranchOwnerAccount>) request.getAttribute("branchAccounts");
+    if (branchAccounts == null) {
+        branchAccounts = java.util.Collections.emptyList();
+    }
 %>
 <!DOCTYPE html>
 <html>
@@ -91,6 +99,50 @@
         .info p {
             margin: 0;
         }
+        .seed-accounts {
+            margin: 10px 0 0;
+            border: 1px solid #d7e3de;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .seed-accounts table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+        }
+        .seed-accounts th,
+        .seed-accounts td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e7efeb;
+            text-align: left;
+        }
+        .seed-accounts th {
+            background: #f2f8f6;
+            color: #355351;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .seed-accounts tr:last-child td {
+            border-bottom: 0;
+        }
+        .branch-accounts {
+            margin: 10px 0 0;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px dashed #c8d9d2;
+            background: #ffffff;
+        }
+        .branch-accounts ul {
+            margin: 6px 0 0;
+            padding-left: 16px;
+        }
+        .branch-accounts li {
+            margin-bottom: 4px;
+            color: #395654;
+            font-size: 0.9rem;
+        }
         .field { margin-bottom: 12px; }
         label { display: block; margin-bottom: 6px; font-size: 0.84rem; font-weight: 700; color: #34504e; }
         input {
@@ -149,7 +201,52 @@
     <h1>Đăng nhập mua hàng</h1>
     <div class="info">
         <p>Tài khoản demo: <strong>demo</strong> | Mật khẩu: <strong>123456</strong></p>
-        <p>Tài khoản admin: <strong>admin</strong> | Mật khẩu: <strong>admin123</strong></p>
+        <div class="seed-accounts">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vai trò</th>
+                        <th>Tài khoản</th>
+                        <th>Mật khẩu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Chủ hãng</td>
+                        <td>company_owner</td>
+                        <td>owner123</td>
+                    </tr>
+                    <tr>
+                        <td>Chủ hãng (cũ)</td>
+                        <td>admin</td>
+                        <td>admin123</td>
+                    </tr>
+                    <tr>
+                        <td>Chủ chi nhánh Hà Nội</td>
+                        <td>branch_hn hoặc branch_owner_hn</td>
+                        <td>branch123</td>
+                    </tr>
+                    <tr>
+                        <td>Chủ chi nhánh HCM</td>
+                        <td>branch_hcm hoặc branch_owner_hcm</td>
+                        <td>branch123</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="branch-accounts">
+            <p><strong>Tài khoản đăng nhập theo từng chi nhánh:</strong></p>
+            <% if (branchAccounts.isEmpty()) { %>
+                <p>Chưa có tài khoản chi nhánh nào. Admin có thể tạo tại Dashboard công ty.</p>
+            <% } else { %>
+                <ul>
+                    <% for (UserDAO.BranchOwnerAccount account : branchAccounts) { %>
+                        <li><%= account.getBranchName() %> (<%= account.getBranchId() %>) - @<%= account.getOwnerUsername() %></li>
+                    <% } %>
+                </ul>
+                <p>Tài khoản mặc định có mật khẩu như bảng trên; tài khoản chi nhánh mới sẽ dùng mật khẩu do admin đặt khi tạo.</p>
+            <% } %>
+        </div>
     </div>
 
     <% if (authError != null) { %><div class="msg err"><%= authError %></div><% } %>
