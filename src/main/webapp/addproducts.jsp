@@ -4,7 +4,7 @@
 <%@ page import="com.btl_web.model.ClothingStore" %>
 <%
     User currentUser = (User) session.getAttribute("currentUser");
-    if (currentUser == null || !currentUser.isAdmin()) {
+    if (currentUser == null || !currentUser.isCompanyOwner()) {
         session.setAttribute("authError", "Chỉ tài khoản admin mới được truy cập trang quản trị sản phẩm.");
         response.sendRedirect(request.getContextPath() + "/auth/login");
         return;

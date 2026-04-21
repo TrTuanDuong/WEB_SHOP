@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet(urlPatterns = {"/cart", "/cart/add", "/cart/remove", "/cart/checkout"})
+@WebServlet(urlPatterns = { "/cart", "/cart/add", "/cart/remove", "/cart/checkout" })
 public class CartServlet extends HttpServlet {
 
     private UserDAO userDAO = new UserDAO();
@@ -51,10 +51,11 @@ public class CartServlet extends HttpServlet {
                 total = total.add(lineTotal);
                 items.add(new CartItemView(product, quantity, lineTotal));
             } catch (SQLException ex) {
-                System.getLogger(CartServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                System.getLogger(CartServlet.class.getName()).log(
+                        System.Logger.Level.ERROR,
+                        "Failed to load cart item",
+                        ex);
             }
-          
-
         }
 
         request.setAttribute("cartItems", items);
@@ -78,7 +79,10 @@ public class CartServlet extends HttpServlet {
             try {
                 addToCart(request, response);
             } catch (SQLException ex) {
-                System.getLogger(CartServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                System.getLogger(CartServlet.class.getName()).log(
+                        System.Logger.Level.ERROR,
+                        "Failed to add item to cart",
+                        ex);
             }
             return;
         }
@@ -90,14 +94,18 @@ public class CartServlet extends HttpServlet {
             try {
                 checkout(request, response);
             } catch (SQLException ex) {
-                System.getLogger(CartServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                System.getLogger(CartServlet.class.getName()).log(
+                        System.Logger.Level.ERROR,
+                        "Checkout failed",
+                        ex);
             }
             return;
         }
 
         response.sendRedirect(request.getContextPath() + "/cart");
     }
-    //Them vao gio hang cua khach hang
+
+    // Them vao gio hang cua khach hang
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException, SQLException {
         User currentUser = (User) request.getSession().getAttribute("currentUser");
@@ -183,11 +191,19 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        OrderStoreDAO.createOrder(getServletContext(), latestUser, lines, totalForLines(lines));
+        BigDecimal subtotal = totalForLines(lines);
+        BigDecimal discountRate = latestUser.getMembershipDiscountRate();
+        String memberTier = latestUser.getMembershipTier();
+
+        OrderStoreDAO.createOrder(getServletContext(), latestUser, lines, subtotal, discountRate, memberTier);
 
         CartStore.removeItems(getServletContext(), currentUser.getUsername(), new ArrayList<>(selectedItems.keySet()));
 
-        request.getSession().setAttribute("shopSuccess", "Đặt hàng thành công. Cảm ơn bạn đã mua sắm!");
+        String tierMessage = "STANDARD".equalsIgnoreCase(memberTier)
+                ? ""
+                : " (đã áp dụng ưu đãi hạng " + memberTier + ")";
+        request.getSession().setAttribute("shopSuccess",
+                "Đặt hàng thành công" + tierMessage + ". Cảm ơn bạn đã mua sắm!");
         response.sendRedirect(request.getContextPath() + "/orders");
     }
 

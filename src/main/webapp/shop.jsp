@@ -3,8 +3,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
 <%
-    @SuppressWarnings(
-            "unchecked")
     List<Product> products = (List<Product>) request.getAttribute("products");
     if (products == null) {
         products = java.util.Collections.emptyList();
@@ -32,6 +30,13 @@
     }
 
     User currentUser = (User) session.getAttribute("currentUser");
+    String membershipTierLabel = "Vô hạng";
+    if (currentUser != null) {
+        String tier = currentUser.getMembershipTier() == null ? "" : currentUser.getMembershipTier().trim();
+        if (!tier.isEmpty() && !"STANDARD".equalsIgnoreCase(tier)) {
+            membershipTierLabel = tier;
+        }
+    }
     String authSuccess = (String) session.getAttribute("authSuccess");
     String shopSuccess = (String) session.getAttribute("shopSuccess");
     String shopError = (String) session.getAttribute("shopError");
@@ -403,7 +408,6 @@
                     grid-template-columns: repeat(3, minmax(0, 1fr));
                 }
             }
-
             @media (max-width: 760px) {
                 body {
                     padding: 10px;
@@ -415,7 +419,6 @@
                     top: 6px;
                 }
             }
-
             @media (max-width: 520px) {
                 .grid {
                     grid-template-columns: 1fr;
@@ -432,200 +435,205 @@
                 <a class="link-btn primary" href="<%= request.getContextPath()%>/auth/register">Đăng ký</a>
                 <% } else {%>
                 <span class="badge">Xin chào, <%= currentUser.getFullName()%></span>
-                <% if (currentUser.isAdmin()) {%>
+                <% if (currentUser.isCompanyOwner()) {%>
+                <a class="link-btn" href="<%= request.getContextPath()%>/company/dashboard">Dashboard công ty</a>
                 <a class="link-btn primary" href="<%= request.getContextPath()%>/addproducts">Thêm sản phẩm</a>
+                <% } else if (currentUser.isBranchOwner()) {%>
+                <a class="link-btn" href="<%= request.getContextPath()%>/branch/dashboard">Dashboard chi nhánh</a>
+                <% } else {%>
+                <span class="badge">Hạng <%= membershipTierLabel%></span>
                 <% }%>
                 <a class="link-btn" href="<%= request.getContextPath()%>/profile">Trang cá nhân</a>
                 <a class="link-btn" href="<%= request.getContextPath()%>/cart">Giỏ hàng(<%= cartCount%>)</a>
                 <a class="link-btn" href="<%= request.getContextPath()%>/orders">Đơn hàng</a>
-                <% if (currentUser.isAdmin()) {%>
+                <% if (currentUser.isCompanyOwner()) {%>
                 <a class="link-btn" href="<%= request.getContextPath()%>/admin-contact">Yêu cầu</a>
                 <% } else {%>
                 <a class="link-btn" href="<%= request.getContextPath()%>/admin-contact">Liên hệ admin</a>
                 <% }%>
                 <a class="link-btn logout" href="<%= request.getContextPath()%>/auth/logout">Đăng xuất</a>
-                <% }%>
+                <% } %>
             </div>
         </div>
 
-        <div class="layout">
-            <aside class="sidebar">
-                <h2>Bộ lọc sản phẩm</h2>
-                <form id="filterForm" action="<%= request.getContextPath()%>/shop" method="get">
-                    <div class="field">
-                        <label for="q">Tìm kiếm</label>
-                        <input id="q" name="q" value="<%= q%>" placeholder="Mã hoặc tên sản phẩm">
-                    </div>
-
-                    <div class="field">
-                        <label for="group">Phân loại chính</label>
-                        <select id="group" name="group">
-                            <option value="all" <%= "all".equals(group) ? "selected" : ""%>>Tất cả</option>
-                            <option value="Người lớn" <%= "Người lớn".equals(group) ? "selected" : ""%>>Người lớn</option>
-                            <option value="Trẻ em" <%= "Trẻ em".equals(group) ? "selected" : ""%>>Trẻ em</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label for="segment">Nhóm chi tiết</label>
-                        <select id="segment" name="segment"></select>
-                    </div>
-
-                    <div class="actions">
-                        <button class="btn btn-primary" type="submit">Áp dụng</button>
-                        <a class="link-btn" href="<%= request.getContextPath()%>/shop">Xóa lọc</a>
-                    </div>
-                </form>
-            </aside>
-
-            <section class="content">
-                <div class="messages">
-                    <% if (authSuccess != null) {%><div class="message ok"><%= authSuccess%></div><% } %>
-                    <% if (shopSuccess != null) {%><div class="message ok"><%= shopSuccess%></div><% } %>
-                    <% if (shopError != null) {%><div class="message err"><%= shopError%></div><% }%>
+    <div class="layout">
+        <aside class="sidebar">
+            <h2>Bộ lọc sản phẩm</h2>
+            <form id="filterForm" action="<%= request.getContextPath()%>/shop" method="get">
+                <div class="field">
+                    <label for="q">Tìm kiếm</label>
+                    <input id="q" name="q" value="<%= q%>" placeholder="Mã hoặc tên sản phẩm">
                 </div>
 
-                <div class="summary">
-                    <h2>Danh mục quần áo</h2>
-                    <div class="count">Tổng <strong><%= totalItems%></strong> sản phẩm | 1 trang hiển thị tối đa 40 sản phẩm (5 cột x 8 hàng)</div>
+                <div class="field">
+                    <label for="group">Phân loại chính</label>
+                    <select id="group" name="group">
+                        <option value="all" <%= "all".equals(group) ? "selected" : ""%>>Tất cả</option>
+                        <option value="Người lớn" <%= "Người lớn".equals(group) ? "selected" : ""%>>Người lớn</option>
+                        <option value="Trẻ em" <%= "Trẻ em".equals(group) ? "selected" : ""%>>Trẻ em</option>
+                    </select>
                 </div>
 
-                <% if (products.isEmpty()) { %>
-                <div class="empty">Không có sản phẩm phù hợp bộ lọc hiện tại.</div>
-                <% } else { %>
-                <div class="grid">
-                    <% for (Product product : products) { %>
-                    <article class="card">
-                        <div class="thumb">
-                            <%
-                                String image = product.getImage();
-                                String imageSrc = null;
-                                if (image != null && !image.trim().isEmpty()) {
-                                    String trimmedImage = image.trim();
-                                    if (trimmedImage.startsWith("http://") || trimmedImage.startsWith("https://")) {
-                                        imageSrc = trimmedImage;
-                                    } else if (trimmedImage.startsWith("/")) {
-                                        imageSrc = request.getContextPath() + trimmedImage;
-                                    } else {
-                                        imageSrc = request.getContextPath() + "/image/" + trimmedImage;
-                                    }
+                <div class="field">
+                    <label for="segment">Nhóm chi tiết</label>
+                    <select id="segment" name="segment"></select>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" type="submit">Áp dụng</button>
+                    <a class="link-btn" href="<%= request.getContextPath()%>/shop">Xóa lọc</a>
+                </div>
+            </form>
+        </aside>
+
+        <section class="content">
+            <div class="messages">
+                <% if (authSuccess != null) {%><div class="message ok"><%= authSuccess%></div><% } %>
+                <% if (shopSuccess != null) {%><div class="message ok"><%= shopSuccess%></div><% } %>
+                <% if (shopError != null) {%><div class="message err"><%= shopError%></div><% }%>
+            </div>
+
+            <div class="summary">
+                <h2>Danh mục quần áo</h2>
+                <div class="count">Tổng <strong><%= totalItems%></strong> sản phẩm | 1 trang hiển thị tối đa 40 sản phẩm (5 cột x 8 hàng)</div>
+            </div>
+
+            <% if (products.isEmpty()) { %>
+            <div class="empty">Không có sản phẩm phù hợp bộ lọc hiện tại.</div>
+            <% } else { %>
+            <div class="grid">
+                <% for (Product product : products) { %>
+                <article class="card">
+                    <div class="thumb">
+                        <%
+                            String image = product.getImage();
+                            String imageSrc = null;
+                            if (image != null && !image.trim().isEmpty()) {
+                                String trimmedImage = image.trim();
+                                if (trimmedImage.startsWith("http://") || trimmedImage.startsWith("https://")) {
+                                    imageSrc = trimmedImage;
+                                } else if (trimmedImage.startsWith("/")) {
+                                    imageSrc = request.getContextPath() + trimmedImage;
+                                } else {
+                                    imageSrc = request.getContextPath() + "/image/" + trimmedImage;
                                 }
-                            %>
-                            <% if (imageSrc != null) {%>
-                            <img src="<%= imageSrc%>" alt="<%= product.getName()%>" onerror="this.remove();">
-                            <% }%>
-                        </div>
-                        <h3><%= product.getName()%></h3>
-                        <div class="meta">
-                            <span><%= product.getGroup()%></span>
-                            <span>|</span>
-                            <span><%= product.getSegment()%></span>
-                            <span>|</span>
-                            <span>Size <%= product.getSize()%></span>
-                            <span>|</span>
-                            <span><%= product.getColor()%></span>
-                        </div>
-                        <div class="price"><%= product.getPrice().toPlainString()%> VND</div>
-                        <div class="buy">
-                            <% if (currentUser == null) {%>
-                            <div class="login-note">Đăng nhập để thêm vào giỏ hàng.</div>
-                            <a class="link-btn" href="<%= request.getContextPath()%>/auth/login">Đăng nhập để mua</a>
-                            <% } else {%>
-                            <form action="<%= request.getContextPath()%>/cart/add" method="post">
-                                <input type="hidden" name="productId" value="<%= product.getId()%>">
-                                <div class="buy-row">
-                                    <input type="number" name="quantity" min="1" value="1">
-                                    <button type="submit">Thêm vào giỏ</button>
-                                </div>
-                            </form>
-                            <% } %>
-                        </div>
-                    </article>
-                    <% } %>
-                </div>
+                            }
+                        %>
+                        <% if (imageSrc != null) {%>
+                        <img src="<%= imageSrc%>" alt="<%= product.getName()%>" onerror="this.remove();">
+                        <% }%>
+                    </div>
+                    <h3><%= product.getName()%></h3>
+                    <div class="meta">
+                        <span><%= product.getGroup()%></span>
+                        <span>|</span>
+                        <span><%= product.getSegment()%></span>
+                        <span>|</span>
+                        <span>Size <%= product.getSize()%></span>
+                        <span>|</span>
+                        <span><%= product.getColor()%></span>
+                    </div>
+                    <div class="price"><%= product.getPrice().toPlainString()%> VND</div>
+                    <div class="buy">
+                        <% if (currentUser == null) {%>
+                        <div class="login-note">Đăng nhập để thêm vào giỏ hàng.</div>
+                        <a class="link-btn" href="<%= request.getContextPath()%>/auth/login">Đăng nhập để mua</a>
+                        <% } else {%>
+                        <form action="<%= request.getContextPath()%>/cart/add" method="post">
+                            <input type="hidden" name="productId" value="<%= product.getId()%>">
+                            <div class="buy-row">
+                                <input type="number" name="quantity" min="1" value="1">
+                                <button type="submit">Thêm vào giỏ</button>
+                            </div>
+                        </form>
+                        <% } %>
+                    </div>
+                </article>
+                <% } %>
+            </div>
+            <% } %>
+
+            <div class="pagination">
+                <% if (pageNumber > 1) {%>
+                <a href="<%= request.getContextPath()%>/shop?page=<%= pageNumber - 1%><%= querySuffix%>">Trang trước</a>
                 <% } %>
 
-                <div class="pagination">
-                    <% if (pageNumber > 1) {%>
-                    <a href="<%= request.getContextPath()%>/shop?page=<%= pageNumber - 1%><%= querySuffix%>">Trang trước</a>
-                    <% } %>
+                <% for (int i = 1; i <= totalPages; i++) { %>
+                <% if (i == pageNumber) {%>
+                <span class="active"><%= i%></span>
+                <% } else {%>
+                <a href="<%= request.getContextPath()%>/shop?page=<%= i%><%= querySuffix%>"><%= i%></a>
+                <% } %>
+                <% } %>
 
-                    <% for (int i = 1; i <= totalPages; i++) { %>
-                    <% if (i == pageNumber) {%>
-                    <span class="active"><%= i%></span>
-                    <% } else {%>
-                    <a href="<%= request.getContextPath()%>/shop?page=<%= i%><%= querySuffix%>"><%= i%></a>
-                    <% } %>
-                    <% } %>
+                <% if (pageNumber < totalPages) {%>
+                <a href="<%= request.getContextPath()%>/shop?page=<%= pageNumber + 1%><%= querySuffix%>">Trang sau</a>
+                <% }%>
+            </div>
+        </section>
+    </div>
 
-                    <% if (pageNumber < totalPages) {%>
-                    <a href="<%= request.getContextPath()%>/shop?page=<%= pageNumber + 1%><%= querySuffix%>">Trang sau</a>
-                    <% }%>
-                </div>
-            </section>
-        </div>
+    <script>
+        (function () {
+            var groupSelect = document.getElementById('group');
+            var segmentSelect = document.getElementById('segment');
+            var selectedSegment = '<%= segment%>';
 
-        <script>
-            (function () {
-                var groupSelect = document.getElementById('group');
-                var segmentSelect = document.getElementById('segment');
-                var selectedSegment = '<%= segment%>';
-
-                function optionsForGroup(group) {
-                    if (group === 'Người lớn') {
-                        return [
-                            {value: 'all', label: 'Tất cả (Người lớn)'},
-                            {value: 'male', label: 'Nam'},
-                            {value: 'female', label: 'Nữ'}
-                        ];
-                    }
-                    if (group === 'Trẻ em') {
-                        return [
-                            {value: 'all', label: 'Tất cả (Trẻ em)'},
-                            {value: 'boy', label: 'Bé trai'},
-                            {value: 'girl', label: 'Bé gái'}
-                        ];
-                    }
+            function optionsForGroup(group) {
+                if (group === 'Người lớn') {
                     return [
-                        {value: 'all', label: 'Tất cả'},
-                        {value: 'male', label: 'Người lớn - Nam'},
-                        {value: 'female', label: 'Người lớn - Nữ'},
-                        {value: 'boy', label: 'Trẻ em - Bé trai'},
-                        {value: 'girl', label: 'Trẻ em - Bé gái'}
+                        {value: 'all', label: 'Tất cả (Người lớn)'},
+                        {value: 'male', label: 'Nam'},
+                        {value: 'female', label: 'Nữ'}
                     ];
                 }
-
-                function renderSegmentOptions() {
-                    var group = groupSelect.value;
-                    var options = optionsForGroup(group);
-                    var allowedValues = options.map(function (item) {
-                        return item.value;
-                    });
-                    var current = allowedValues.indexOf(selectedSegment) >= 0 ? selectedSegment : 'all';
-
-                    segmentSelect.innerHTML = '';
-                    options.forEach(function (item) {
-                        var option = document.createElement('option');
-                        option.value = item.value;
-                        option.textContent = item.label;
-                        if (item.value === current) {
-                            option.selected = true;
-                        }
-                        segmentSelect.appendChild(option);
-                    });
+                if (group === 'Trẻ em') {
+                    return [
+                        {value: 'all', label: 'Tất cả (Trẻ em)'},
+                        {value: 'boy', label: 'Bé trai'},
+                        {value: 'girl', label: 'Bé gái'}
+                    ];
                 }
+                return [
+                    {value: 'all', label: 'Tất cả'},
+                    {value: 'male', label: 'Người lớn - Nam'},
+                    {value: 'female', label: 'Người lớn - Nữ'},
+                    {value: 'boy', label: 'Trẻ em - Bé trai'},
+                    {value: 'girl', label: 'Trẻ em - Bé gái'}
+                ];
+            }
 
-                groupSelect.addEventListener('change', function () {
-                    selectedSegment = 'all';
-                    renderSegmentOptions();
+            function renderSegmentOptions() {
+                var group = groupSelect.value;
+                var options = optionsForGroup(group);
+                var allowedValues = options.map(function (item) {
+                    return item.value;
                 });
+                var current = allowedValues.indexOf(selectedSegment) >= 0 ? selectedSegment : 'all';
 
-                segmentSelect.addEventListener('change', function () {
-                    selectedSegment = segmentSelect.value;
+                segmentSelect.innerHTML = '';
+                options.forEach(function (item) {
+                    var option = document.createElement('option');
+                    option.value = item.value;
+                    option.textContent = item.label;
+                    if (item.value === current) {
+                        option.selected = true;
+                    }
+                    segmentSelect.appendChild(option);
                 });
+            }
 
+            groupSelect.addEventListener('change', function () {
+                selectedSegment = 'all';
                 renderSegmentOptions();
-            })();
-        </script>
-    </body>
+            });
+
+            segmentSelect.addEventListener('change', function () {
+                selectedSegment = segmentSelect.value;
+            });
+
+            renderSegmentOptions();
+        })();
+    </script>
+</body>
 </html>

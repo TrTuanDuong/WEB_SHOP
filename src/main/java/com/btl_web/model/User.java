@@ -16,6 +16,11 @@ public class User {
     private String phone;
     private String baseAddress;
     private String defaultAddressId;
+    private String branchId;
+    private String branchName;
+    private String membershipTier;
+    private java.math.BigDecimal membershipDiscountRate;
+    private java.math.BigDecimal spendingLast6Months;
     private final List<Address> shippingAddresses;
 
     public User(String username, String fullName, String password, String roleCode, String roleName) {
@@ -31,6 +36,11 @@ public class User {
         this.phone = "";
         this.baseAddress = "";
         this.defaultAddressId = "";
+        this.branchId = "";
+        this.branchName = "";
+        this.membershipTier = "STANDARD";
+        this.membershipDiscountRate = java.math.BigDecimal.ZERO;
+        this.spendingLast6Months = java.math.BigDecimal.ZERO;
     }
 
     public User(User source) {
@@ -46,6 +56,11 @@ public class User {
         this.phone = source.getPhone();
         this.baseAddress = source.getBaseAddress();
         this.defaultAddressId = source.getDefaultAddressId();
+        this.branchId = source.getBranchId();
+        this.branchName = source.getBranchName();
+        this.membershipTier = source.getMembershipTier();
+        this.membershipDiscountRate = source.getMembershipDiscountRate();
+        this.spendingLast6Months = source.getSpendingLast6Months();
         for (Address address : source.getShippingAddresses()) {
             this.shippingAddresses.add(new Address(address));
         }
@@ -77,6 +92,18 @@ public class User {
 
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(roleCode);
+    }
+
+    public boolean isCompanyOwner() {
+        return "COMPANY_OWNER".equalsIgnoreCase(roleCode) || isAdmin();
+    }
+
+    public boolean isBranchOwner() {
+        return "BRANCH_OWNER".equalsIgnoreCase(roleCode);
+    }
+
+    public boolean isCustomer() {
+        return "CUSTOMER".equalsIgnoreCase(roleCode);
     }
 
     public int getAge() {
@@ -143,5 +170,45 @@ public class User {
 
     public void setDefaultAddressId(String defaultAddressId) {
         this.defaultAddressId = defaultAddressId;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
+    }
+
+    public String getBranchName() {
+        return branchName;
+    }
+
+    public void setBranchName(String branchName) {
+        this.branchName = branchName;
+    }
+
+    public String getMembershipTier() {
+        return membershipTier;
+    }
+
+    public void setMembershipTier(String membershipTier) {
+        this.membershipTier = membershipTier;
+    }
+
+    public java.math.BigDecimal getMembershipDiscountRate() {
+        return membershipDiscountRate;
+    }
+
+    public void setMembershipDiscountRate(java.math.BigDecimal membershipDiscountRate) {
+        this.membershipDiscountRate = membershipDiscountRate;
+    }
+
+    public java.math.BigDecimal getSpendingLast6Months() {
+        return spendingLast6Months;
+    }
+
+    public void setSpendingLast6Months(java.math.BigDecimal spendingLast6Months) {
+        this.spendingLast6Months = spendingLast6Months;
     }
 }

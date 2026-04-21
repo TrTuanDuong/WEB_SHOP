@@ -21,12 +21,12 @@ public class AddProductsServlet extends HttpServlet {
         HttpSession session = request.getSession();
         User currentUser = (User) session.getAttribute("currentUser");
         if (!userDAO.isAdmin(currentUser)) {
-            session.setAttribute("authError", "Chỉ tài khoản admin mới được truy cập trang quản trị sản phẩm.");
+            session.setAttribute("authError", "Chỉ tài khoản admin mới được truy cập trang quản lý sản phẩm.");
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
 
-        request.getRequestDispatcher("/addproducts.jsp").forward(request, response);
+        request.getRequestDispatcher("/products.jsp").forward(request, response);
     }
 
     @Override

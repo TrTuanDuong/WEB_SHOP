@@ -1,6 +1,8 @@
 package com.btl_web.controller;
 
+import com.btl_web.dao.UserDAO;
 import com.btl_web.model.ClothingStore;
+import com.btl_web.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -13,9 +15,19 @@ import java.math.BigDecimal;
 
 @WebServlet("/clothes/preview")
 public class ClothingPreviewServlet extends HttpServlet {
+    private final UserDAO userDAO = new UserDAO();
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (!userDAO.isAdmin(currentUser)) {
+            session.setAttribute("authError", "Chỉ tài khoản admin mới được thao tác sản phẩm.");
+            response.sendRedirect(request.getContextPath() + "/auth/login");
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
 
         String productCode = normalize(request.getParameter("productCode"));
@@ -34,7 +46,6 @@ public class ClothingPreviewServlet extends HttpServlet {
         request.setAttribute("enteredPrice", priceText);
         request.setAttribute("enteredStockQuantity", stockText);
 
-        HttpSession session = request.getSession();
         session.setAttribute("lastCategory", category);
 
         BigDecimal price = null;
