@@ -174,8 +174,8 @@
 
     <div class="grid">
         <div class="card"><div class="k">Tổng doanh số công ty</div><div class="v"><%= summary.getTotalRevenue().toPlainString() %> VND</div></div>
-        <div class="card"><div class="k">Tổng tồn kho</div><div class="v"><%= summary.getTotalInventory() %></div></div>
-        <div class="card"><div class="k">Tổng số sản phẩm</div><div class="v"><%= summary.getTotalProducts() %></div></div>
+        <div class="card"><div class="k">Tổng hàng tồn kho</div><div class="v"><%= summary.getTotalInventory() %></div></div>
+        <div class="card"><div class="k">Tổng số sản phẩm của cả hãng</div><div class="v"><%= summary.getTotalProducts() %></div></div>
     </div>
 
     <div class="shell">

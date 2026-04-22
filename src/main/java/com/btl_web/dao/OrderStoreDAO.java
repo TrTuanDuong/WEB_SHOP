@@ -22,9 +22,49 @@ import java.util.Map;
 import java.util.UUID;
 
 public class OrderStoreDAO {
+    public static int countByBranchAndStatus(ServletContext servletContext, String branchId, OrderStore.OrderStatus status) {
+        String sql = "SELECT COUNT(*) FROM orders WHERE branch_id = ? AND status = ?";
+        try (Connection connection = DbSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, defaultBranchId(branchId));
+            statement.setString(2, status.name());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Lỗi hệ thống: Không thể đếm đơn hàng theo trạng thái.", e);
+        }
+    }
+
+    public static boolean updateStatusByBranch(
+            ServletContext servletContext,
+            String branchId,
+            String orderId,
+            OrderStore.OrderStatus fromStatus,
+            OrderStore.OrderStatus toStatus) {
+        String sql = "UPDATE orders "
+                + "SET status = ?, updated_at = NOW() "
+                + "WHERE order_id = ? AND branch_id = ? AND status = ?";
+
+        try (Connection connection = DbSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, toStatus.name());
+            statement.setString(2, orderId);
+            statement.setString(3, defaultBranchId(branchId));
+            statement.setString(4, fromStatus.name());
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Lỗi hệ thống: Không thể cập nhật trạng thái đơn hàng.", e);
+        }
+    }
+
     public static OrderStore.Order createOrder(
             ServletContext servletContext,
             User user,
+            String branchId,
             List<OrderLine> lines,
             BigDecimal subtotal,
             BigDecimal discountRate,
@@ -49,7 +89,7 @@ public class OrderStoreDAO {
                 try (PreparedStatement orderStatement = connection.prepareStatement(insertOrderSql)) {
                     orderStatement.setString(1, orderId);
                     orderStatement.setString(2, user.getUsername());
-                    orderStatement.setString(3, defaultBranchId(user.getBranchId()));
+                    orderStatement.setString(3, defaultBranchId(branchId));
                     orderStatement.setString(4, user.getFullName());
                     orderStatement.setString(5, user.getDefaultShippingAddressSummary());
                     orderStatement.setString(6, OrderStore.OrderStatus.CHO_XAC_NHAN.name());
@@ -89,7 +129,7 @@ public class OrderStoreDAO {
         return new OrderStore.Order(
                 orderId,
                 user.getUsername(),
-                defaultBranchId(user.getBranchId()),
+            defaultBranchId(branchId),
                 user.getFullName(),
                 user.getDefaultShippingAddressSummary(),
                 createdAt,

@@ -1,4 +1,5 @@
 <%@page import="com.btl_web.model.Product"%>
+<%@page import="com.btl_web.dao.UserDAO"%>
 <%@page import="com.btl_web.model.User"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
@@ -11,6 +12,9 @@
     String group = (String) request.getAttribute("group");
     String segment = (String) request.getAttribute("segment");
     String q = (String) request.getAttribute("q");
+    String selectedBranchId = (String) request.getAttribute("selectedBranchId");
+    @SuppressWarnings("unchecked")
+    List<UserDAO.BranchOwnerAccount> branches = (List<UserDAO.BranchOwnerAccount>) request.getAttribute("branches");
     Integer pageNumberObj = (Integer) request.getAttribute("page");
     Integer totalPagesObj = (Integer) request.getAttribute("totalPages");
     Integer totalItemsObj = (Integer) request.getAttribute("totalItems");
@@ -27,6 +31,12 @@
     }
     if (q == null) {
         q = "";
+    }
+    if (selectedBranchId == null) {
+        selectedBranchId = "";
+    }
+    if (branches == null) {
+        branches = java.util.Collections.emptyList();
     }
 
     User currentUser = (User) session.getAttribute("currentUser");
@@ -49,7 +59,8 @@
 
     String querySuffix = "&group=" + java.net.URLEncoder.encode(group, java.nio.charset.StandardCharsets.UTF_8)
             + "&segment=" + java.net.URLEncoder.encode(segment, java.nio.charset.StandardCharsets.UTF_8)
-            + "&q=" + java.net.URLEncoder.encode(q, java.nio.charset.StandardCharsets.UTF_8);
+            + "&q=" + java.net.URLEncoder.encode(q, java.nio.charset.StandardCharsets.UTF_8)
+            + "&branchId=" + java.net.URLEncoder.encode(selectedBranchId, java.nio.charset.StandardCharsets.UTF_8);
 %>
 <!DOCTYPE html>
 <html>
@@ -120,6 +131,35 @@
                 gap: 8px;
                 flex-wrap: wrap;
                 align-items: center;
+            }
+
+            .branch-select-form {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .branch-select-form select {
+                border: 1px solid #ced8d2;
+                border-radius: 10px;
+                padding: 7px 9px;
+                background: #fff;
+                color: #2b4442;
+                font: inherit;
+                font-size: 0.88rem;
+            }
+
+            .branch-select-form button {
+                border: 1px solid #ced8d2;
+                border-radius: 10px;
+                padding: 7px 10px;
+                background: #fff;
+                color: #2b4442;
+                font: inherit;
+                font-size: 0.88rem;
+                font-weight: 600;
+                cursor: pointer;
             }
 
             .badge {
@@ -430,6 +470,19 @@
         <div class="topbar">
             <div class="logo">Linen Lab Shop</div>
             <div class="top-actions">
+                <form class="branch-select-form" action="<%= request.getContextPath()%>/shop" method="get">
+                    <input type="hidden" name="group" value="<%= group%>">
+                    <input type="hidden" name="segment" value="<%= segment%>">
+                    <input type="hidden" name="q" value="<%= q%>">
+                    <select name="branchId" aria-label="Chọn chi nhánh">
+                        <% for (UserDAO.BranchOwnerAccount branch : branches) { %>
+                            <option value="<%= branch.getBranchId()%>" <%= branch.getBranchId().equalsIgnoreCase(selectedBranchId) ? "selected" : ""%>>
+                                <%= branch.getBranchName()%> (<%= branch.getBranchId()%>)
+                            </option>
+                        <% } %>
+                    </select>
+                    <button type="submit">Chọn chi nhánh</button>
+                </form>
                 <% if (currentUser == null) {%>
                 <a class="link-btn" href="<%= request.getContextPath()%>/auth/login">Đăng nhập</a>
                 <a class="link-btn primary" href="<%= request.getContextPath()%>/auth/register">Đăng ký</a>
@@ -460,6 +513,7 @@
         <aside class="sidebar">
             <h2>Bộ lọc sản phẩm</h2>
             <form id="filterForm" action="<%= request.getContextPath()%>/shop" method="get">
+                <input type="hidden" name="branchId" value="<%= selectedBranchId%>">
                 <div class="field">
                     <label for="q">Tìm kiếm</label>
                     <input id="q" name="q" value="<%= q%>" placeholder="Mã hoặc tên sản phẩm">
@@ -481,7 +535,7 @@
 
                 <div class="actions">
                     <button class="btn btn-primary" type="submit">Áp dụng</button>
-                    <a class="link-btn" href="<%= request.getContextPath()%>/shop">Xóa lọc</a>
+                    <a class="link-btn" href="<%= request.getContextPath()%>/shop?branchId=<%= java.net.URLEncoder.encode(selectedBranchId, java.nio.charset.StandardCharsets.UTF_8)%>">Xóa lọc</a>
                 </div>
             </form>
         </aside>
@@ -495,7 +549,7 @@
 
             <div class="summary">
                 <h2>Danh mục quần áo</h2>
-                <div class="count">Tổng <strong><%= totalItems%></strong> sản phẩm | 1 trang hiển thị tối đa 40 sản phẩm (5 cột x 8 hàng)</div>
+                <div class="count">Chi nhánh <strong><%= selectedBranchId%></strong>: tổng <strong><%= totalItems%></strong> sản phẩm | 1 trang hiển thị tối đa 40 sản phẩm (5 cột x 8 hàng)</div>
             </div>
 
             <% if (products.isEmpty()) { %>

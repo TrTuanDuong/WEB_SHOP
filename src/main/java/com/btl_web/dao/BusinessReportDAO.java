@@ -19,8 +19,8 @@ public final class BusinessReportDAO {
     public static CompanySummary companySummary(ServletContext context) {
         String sql = "SELECT "
                 + "COALESCE((SELECT SUM(total) FROM orders WHERE status NOT IN ('DA_HUY', 'DA_TRA_HANG')), 0) AS total_revenue, "
-                + "COALESCE((SELECT SUM(stock_quantity) FROM shop_product), 0) AS total_inventory, "
-                + "COALESCE((SELECT COUNT(*) FROM shop_product), 0) AS total_products";
+                + "COALESCE((SELECT SUM(stock_quantity) FROM clothing_product), 0) AS total_inventory, "
+                + "COALESCE((SELECT COUNT(*) FROM clothing_product), 0) AS total_products";
 
         try (Connection connection = DbSupport.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
@@ -34,6 +34,28 @@ public final class BusinessReportDAO {
                     resultSet.getInt("total_products"));
         } catch (SQLException e) {
             throw new IllegalStateException("Không thể tải tổng quan công ty.", e);
+        }
+    }
+
+    public static List<CategoryStat> categoryStats(ServletContext context) {
+        String sql = "SELECT category, COUNT(*) AS sku_count, COALESCE(SUM(stock_quantity), 0) AS total_stock "
+                + "FROM clothing_product "
+                + "GROUP BY category "
+                + "ORDER BY category";
+
+        List<CategoryStat> rows = new ArrayList<>();
+        try (Connection connection = DbSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                rows.add(new CategoryStat(
+                        resultSet.getString("category"),
+                        resultSet.getInt("sku_count"),
+                        resultSet.getInt("total_stock")));
+            }
+            return Collections.unmodifiableList(rows);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải thống kê theo phân loại.", e);
         }
     }
 
@@ -145,6 +167,30 @@ public final class BusinessReportDAO {
 
         public int getTotalProducts() {
             return totalProducts;
+        }
+    }
+
+    public static final class CategoryStat {
+        private final String category;
+        private final int skuCount;
+        private final int totalStock;
+
+        public CategoryStat(String category, int skuCount, int totalStock) {
+            this.category = category;
+            this.skuCount = skuCount;
+            this.totalStock = totalStock;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public int getSkuCount() {
+            return skuCount;
+        }
+
+        public int getTotalStock() {
+            return totalStock;
         }
     }
 

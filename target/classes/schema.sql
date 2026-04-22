@@ -148,6 +148,52 @@ CREATE INDEX IF NOT EXISTS idx_cart_items_username
 CREATE INDEX IF NOT EXISTS idx_shop_product_branch_id
     ON shop_product(branch_id);
 
+CREATE OR REPLACE FUNCTION sync_clothing_product_from_shop_product()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        DELETE FROM clothing_product
+        WHERE product_code = OLD.id;
+        RETURN OLD;
+    END IF;
+
+    INSERT INTO clothing_product (
+        product_code,
+        name,
+        category,
+        size,
+        color,
+        price,
+        stock_quantity
+    ) VALUES (
+        NEW.id,
+        NEW.name,
+        NEW.group_name,
+        NEW.size,
+        NEW.color,
+        NEW.price,
+        NEW.stock_quantity
+    )
+    ON CONFLICT (product_code) DO UPDATE SET
+        name = EXCLUDED.name,
+        category = EXCLUDED.category,
+        size = EXCLUDED.size,
+        color = EXCLUDED.color,
+        price = EXCLUDED.price,
+        stock_quantity = EXCLUDED.stock_quantity;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_shop_product_sync_clothing_product ON shop_product;
+CREATE TRIGGER trg_shop_product_sync_clothing_product
+AFTER INSERT OR UPDATE OR DELETE ON shop_product
+FOR EACH ROW
+EXECUTE FUNCTION sync_clothing_product_from_shop_product();
+
 INSERT INTO roles (role_code, role_name)
 VALUES
     ('ADMIN', 'Administrator'),

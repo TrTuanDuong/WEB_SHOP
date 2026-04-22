@@ -11,8 +11,9 @@ import java.util.Scanner;
 public final class DbSupport {
     private static final String DB_URL = System.getenv().getOrDefault("DB_URL",
             "jdbc:postgresql://localhost:5432/btl_web");
-    private static final String DB_USER = System.getenv().getOrDefault("DB_USER", "postgres");
-    private static final String DB_PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "postgres");
+    private static final String DB_USER = System.getenv().getOrDefault("DB_USER",
+        System.getenv().getOrDefault("USER", "postgres"));
+    private static final String DB_PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "");
     private static volatile boolean initialized = false;
     private static volatile boolean schemaSynced = false;
 
@@ -82,12 +83,24 @@ public final class DbSupport {
         List<String> statements = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean inSingleQuote = false;
+        boolean inDollarQuote = false;
         for (int i = 0; i < script.length(); i++) {
             char ch = script.charAt(i);
-            if (ch == '\'') {
+
+            if (!inSingleQuote && i + 1 < script.length()
+                    && script.charAt(i) == '$'
+                    && script.charAt(i + 1) == '$') {
+                inDollarQuote = !inDollarQuote;
+                current.append("$$");
+                i++;
+                continue;
+            }
+
+            if (!inDollarQuote && ch == '\'') {
                 inSingleQuote = !inSingleQuote;
             }
-            if (ch == ';' && !inSingleQuote) {
+
+            if (ch == ';' && !inSingleQuote && !inDollarQuote) {
                 String sql = current.toString().trim();
                 if (!sql.isEmpty()) {
                     statements.add(sql);

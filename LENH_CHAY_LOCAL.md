@@ -23,8 +23,8 @@ Nếu chưa tạo user hoặc mật khẩu khác, sửa lại `DB_USER`/`DB_PASS
 ```bash
 export TOMCAT_HOME="/Users/trantuanduong/Downloads/apache-tomcat-9.0.105"
 export DB_URL="jdbc:postgresql://localhost:5432/btl_web"
-export DB_USER="postgres"
-export DB_PASSWORD="postgres"
+export DB_USER="trantuanduong"
+export DB_PASSWORD=""
 ```
 
 Nếu Tomcat của bạn nằm ở đường dẫn khác thì sửa lại giá trị `TOMCAT_HOME`.

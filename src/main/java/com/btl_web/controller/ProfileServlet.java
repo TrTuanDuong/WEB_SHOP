@@ -23,7 +23,7 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
         
-        User latest = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
+        User latest = UserDAO.findByUsername(getServletContext(), currentUser.getUsername());
         request.setAttribute("profileUser", latest);
         request.getRequestDispatcher("/profile.jsp").forward(request, response);
     }
@@ -63,8 +63,8 @@ public class ProfileServlet extends HttpServlet {
 
     private void updateProfile(HttpServletRequest request, HttpServletResponse response, User currentUser)
             throws IOException {
-        User latest = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
-        if (userDAO.isCheckoutProfileReady(latest)) {
+        User latest = UserDAO.findByUsername(getServletContext(), currentUser.getUsername());
+        if (UserDAO.isCheckoutProfileReady(latest)) {
             request.getSession().setAttribute("profileError",
                     "Thông tin cá nhân cố định đã được xác lập. Muốn sửa vui lòng liên hệ admin.");
             response.sendRedirect(request.getContextPath() + "/profile");

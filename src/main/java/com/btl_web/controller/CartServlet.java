@@ -25,7 +25,6 @@ import java.util.Map;
 @WebServlet(urlPatterns = { "/cart", "/cart/add", "/cart/remove", "/cart/checkout" })
 public class CartServlet extends HttpServlet {
 
-    private UserDAO userDAO = new UserDAO();
     private ProductDAO productDAO = new ProductDAO();
 
     @Override
@@ -39,7 +38,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        User latestUser = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
+        User latestUser = UserDAO.findByUsername(getServletContext(), currentUser.getUsername());
         List<CartItemView> items = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
 
@@ -60,7 +59,7 @@ public class CartServlet extends HttpServlet {
 
         request.setAttribute("cartItems", items);
         request.setAttribute("cartTotal", total);
-        request.setAttribute("profileReady", userDAO.isCheckoutProfileReady(latestUser));
+        request.setAttribute("profileReady", UserDAO.isCheckoutProfileReady(latestUser));
         request.setAttribute("defaultAddressId", latestUser == null ? "" : latestUser.getDefaultAddressId());
         request.setAttribute("profileUser", latestUser);
         request.getRequestDispatcher("/cart.jsp").forward(request, response);
@@ -111,9 +110,24 @@ public class CartServlet extends HttpServlet {
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         String productId = normalize(request.getParameter("productId"));
         int quantity = parsePositiveInt(request.getParameter("quantity"));
+        String selectedBranchId = normalize((String) request.getSession().getAttribute("selectedBranchId"));
 
-        if (quantity <= 0 || productDAO.findById(getServletContext(), productId) == null) {
+        if (selectedBranchId.isEmpty()) {
+            request.getSession().setAttribute("shopError", "Vui lòng chọn chi nhánh trước khi thêm sản phẩm vào giỏ.");
+            response.sendRedirect(request.getContextPath() + "/shop");
+            return;
+        }
+
+        Product product = productDAO.findById(getServletContext(), productId);
+
+        if (quantity <= 0 || product == null) {
             request.getSession().setAttribute("shopError", "Không thể thêm sản phẩm vào giỏ.");
+            response.sendRedirect(request.getContextPath() + "/shop");
+            return;
+        }
+
+        if (!selectedBranchId.equalsIgnoreCase(normalize(product.getBranchId()))) {
+            request.getSession().setAttribute("shopError", "Sản phẩm không thuộc chi nhánh đang chọn.");
             response.sendRedirect(request.getContextPath() + "/shop");
             return;
         }
@@ -135,12 +149,19 @@ public class CartServlet extends HttpServlet {
     private void checkout(HttpServletRequest request, HttpServletResponse response)
             throws IOException, SQLException {
         User currentUser = (User) request.getSession().getAttribute("currentUser");
-        User latestUser = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
-        if (!userDAO.isCheckoutProfileReady(latestUser)) {
+        User latestUser = UserDAO.findByUsername(getServletContext(), currentUser.getUsername());
+        if (!UserDAO.isCheckoutProfileReady(latestUser)) {
             request.getSession().setAttribute(
                     "profileError",
                     "Trước khi đặt hàng, bạn cần cập nhật thông tin cá nhân cố định và thiết lập địa chỉ giao hàng mặc định.");
             response.sendRedirect(request.getContextPath() + "/profile");
+            return;
+        }
+
+        String selectedBranchId = normalize((String) request.getSession().getAttribute("selectedBranchId"));
+        if (selectedBranchId.isEmpty()) {
+            request.getSession().setAttribute("shopError", "Vui lòng chọn chi nhánh trước khi đặt hàng.");
+            response.sendRedirect(request.getContextPath() + "/shop");
             return;
         }
 
@@ -177,6 +198,13 @@ public class CartServlet extends HttpServlet {
         for (Map.Entry<String, Integer> entry : selectedItems.entrySet()) {
             Product product = productDAO.findById(getServletContext(), entry.getKey());
             if (product != null) {
+                String productBranchId = normalize(product.getBranchId());
+                if (!selectedBranchId.equalsIgnoreCase(productBranchId)) {
+                    request.getSession().setAttribute("shopError",
+                            "Giỏ hàng có sản phẩm không thuộc chi nhánh đã chọn. Vui lòng kiểm tra lại.");
+                    response.sendRedirect(request.getContextPath() + "/cart");
+                    return;
+            }
                 lines.add(new OrderStore.OrderLine(
                         product.getId(),
                         product.getName(),
@@ -191,11 +219,18 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        BigDecimal subtotal = totalForLines(lines);
         BigDecimal discountRate = latestUser.getMembershipDiscountRate();
         String memberTier = latestUser.getMembershipTier();
 
-        OrderStoreDAO.createOrder(getServletContext(), latestUser, lines, subtotal, discountRate, memberTier);
+        BigDecimal subtotal = totalForLines(lines);
+        OrderStoreDAO.createOrder(
+            getServletContext(),
+            latestUser,
+            selectedBranchId,
+            lines,
+            subtotal,
+            discountRate,
+            memberTier);
 
         CartStore.removeItems(getServletContext(), currentUser.getUsername(), new ArrayList<>(selectedItems.keySet()));
 
@@ -203,7 +238,7 @@ public class CartServlet extends HttpServlet {
                 ? ""
                 : " (đã áp dụng ưu đãi hạng " + memberTier + ")";
         request.getSession().setAttribute("shopSuccess",
-                "Đặt hàng thành công" + tierMessage + ". Cảm ơn bạn đã mua sắm!");
+            "Đặt hàng thành công" + tierMessage + ". Đơn đã gửi đến chi nhánh " + selectedBranchId + " để xác nhận.");
         response.sendRedirect(request.getContextPath() + "/orders");
     }
 

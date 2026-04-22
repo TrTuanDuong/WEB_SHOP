@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/orders")
@@ -31,9 +32,31 @@ public class OrderServlet extends HttpServlet {
 
         User latestUser = userDAO.findByUsername(getServletContext(), currentUser.getUsername());
         List<OrderStore.Order> orders = OrderStoreDAO.findByUsername(getServletContext(), currentUser.getUsername());
+        OrderStore.OrderStatus selectedStatus = parseStatus(request.getParameter("status"));
+        if (selectedStatus != null) {
+            List<OrderStore.Order> filtered = new ArrayList<>();
+            for (OrderStore.Order order : orders) {
+                if (order.getStatus() == selectedStatus) {
+                    filtered.add(order);
+                }
+            }
+            orders = filtered;
+        }
 
         request.setAttribute("profileUser", latestUser);
         request.setAttribute("orders", orders);
+        request.setAttribute("selectedStatus", selectedStatus == null ? "ALL" : selectedStatus.name());
         request.getRequestDispatcher("/orders.jsp").forward(request, response);
+    }
+
+    private OrderStore.OrderStatus parseStatus(String rawStatus) {
+        if (rawStatus == null || rawStatus.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return OrderStore.OrderStatus.valueOf(rawStatus.trim());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 }

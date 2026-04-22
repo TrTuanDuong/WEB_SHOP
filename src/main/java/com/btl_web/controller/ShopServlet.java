@@ -1,6 +1,7 @@
 package com.btl_web.controller;
 
 import com.btl_web.dao.ProductDAO;
+import com.btl_web.dao.UserDAO;
 import com.btl_web.model.CartStore;
 import com.btl_web.model.Product;
 import com.btl_web.model.User;
@@ -24,6 +25,20 @@ public class ShopServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        List<UserDAO.BranchOwnerAccount> branches = UserDAO.listBranchOwnerAccounts(getServletContext());
+        String selectedBranchId = normalizeOrDefault(request.getParameter("branchId"), "");
+        if (selectedBranchId.isEmpty()) {
+            Object fromSession = session.getAttribute("selectedBranchId");
+            selectedBranchId = fromSession == null ? "" : String.valueOf(fromSession).trim();
+        }
+        if (!isValidBranch(selectedBranchId, branches) && !branches.isEmpty()) {
+            selectedBranchId = branches.get(0).getBranchId();
+        }
+        if (!selectedBranchId.isEmpty()) {
+            session.setAttribute("selectedBranchId", selectedBranchId);
+        }
+
         String group = normalizeOrDefault(request.getParameter("group"), "all");
         String segment = normalizeOrDefault(request.getParameter("segment"), "all");
         String keyword = normalizeOrDefault(request.getParameter("q"), "");
@@ -35,6 +50,9 @@ public class ShopServlet extends HttpServlet {
         List<Product> filtered = new ArrayList<>();
         try {
             for (Product product : productDAO.all(getServletContext())) {
+                if (!matchesBranch(product, selectedBranchId)) {
+                    continue;
+                }
                 if (!matchesGroup(product, group)) {
                     continue;
                 }
@@ -74,13 +92,15 @@ public class ShopServlet extends HttpServlet {
         request.setAttribute("group", group);
         request.setAttribute("segment", segment);
         request.setAttribute("q", keyword);
+        request.setAttribute("selectedBranchId", selectedBranchId);
+        request.setAttribute("branches", branches);
         request.setAttribute("page", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalItems", totalItems);
 
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            User currentUser = (User) session.getAttribute("currentUser");
+        HttpSession existingSession = request.getSession(false);
+        if (existingSession != null) {
+            User currentUser = (User) existingSession.getAttribute("currentUser");
             if (currentUser != null) {
                 request.setAttribute(
                         "cartCount",
@@ -96,6 +116,13 @@ public class ShopServlet extends HttpServlet {
             return true;
         }
         return product.getGroup().equalsIgnoreCase(group);
+    }
+
+    private boolean matchesBranch(Product product, String selectedBranchId) {
+        if (selectedBranchId == null || selectedBranchId.isEmpty()) {
+            return true;
+        }
+        return selectedBranchId.equalsIgnoreCase(normalizeOrDefault(product.getBranchId(), ""));
     }
 
     private boolean matchesSegment(Product product, String segment) {
@@ -162,5 +189,17 @@ public class ShopServlet extends HttpServlet {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? fallback : trimmed;
+    }
+
+    private boolean isValidBranch(String branchId, List<UserDAO.BranchOwnerAccount> branches) {
+        if (branchId == null || branchId.isEmpty()) {
+            return false;
+        }
+        for (UserDAO.BranchOwnerAccount branch : branches) {
+            if (branchId.equalsIgnoreCase(branch.getBranchId())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

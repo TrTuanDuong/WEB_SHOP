@@ -14,6 +14,10 @@
     if (orders == null) {
         orders = java.util.Collections.emptyList();
     }
+    String selectedStatus = (String) request.getAttribute("selectedStatus");
+    if (selectedStatus == null) {
+        selectedStatus = "ALL";
+    }
 
     String membershipTierLabel = "Vô hạng";
     String currentTier = currentUser.getMembershipTier() == null ? "" : currentUser.getMembershipTier().trim();
@@ -148,11 +152,20 @@
             margin-bottom: 12px;
         }
         .pill {
+            display: inline-block;
+            text-decoration: none;
             border: 1px solid #d4ded8;
             background: #fff;
             border-radius: 999px;
             padding: 6px 10px;
             font-size: 0.82rem;
+            color: #35514e;
+            font-weight: 600;
+        }
+        .pill.active {
+            border-color: #0d6c63;
+            background: #e7f4f1;
+            color: #0d6c63;
         }
     </style>
 </head>
@@ -178,12 +191,11 @@
 <div class="card">
     <h1>Đơn hàng của <%= currentUser.getFullName() %></h1>
     <div class="status-list">
-        <span class="pill">Chờ xác nhận</span>
-        <span class="pill">Đã xác nhận</span>
-        <span class="pill">Đang giao</span>
-        <span class="pill">Đã giao</span>
-        <span class="pill">Đã huỷ</span>
-        <span class="pill">Đã trả hàng</span>
+        <a class="pill <%= "ALL".equals(selectedStatus) ? "active" : "" %>" href="<%= request.getContextPath() %>/orders">Tất cả</a>
+        <a class="pill <%= "CHO_XAC_NHAN".equals(selectedStatus) ? "active" : "" %>" href="<%= request.getContextPath() %>/orders?status=CHO_XAC_NHAN">Chờ xác nhận</a>
+        <a class="pill <%= "DA_XAC_NHAN".equals(selectedStatus) ? "active" : "" %>" href="<%= request.getContextPath() %>/orders?status=DA_XAC_NHAN">Đã xác nhận</a>
+        <a class="pill <%= "DANG_GIAO".equals(selectedStatus) ? "active" : "" %>" href="<%= request.getContextPath() %>/orders?status=DANG_GIAO">Đang giao</a>
+        <a class="pill <%= "DA_GIAO".equals(selectedStatus) ? "active" : "" %>" href="<%= request.getContextPath() %>/orders?status=DA_GIAO">Đã giao</a>
     </div>
 
     <% if (orders.isEmpty()) { %>

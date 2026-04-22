@@ -23,6 +23,7 @@ public class BusinessDashboardServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        String servletPath = request.getServletPath();
 
         HttpSession session = request.getSession();
         User currentUser = (User) session.getAttribute("currentUser");
@@ -39,7 +40,13 @@ public class BusinessDashboardServlet extends HttpServlet {
         }
 
         session.setAttribute("currentUser", latestUser);
-        if (!userDAO.isCompanyOwner(latestUser) || !"/company/dashboard".equals(request.getServletPath())) {
+
+        if ("/branch/dashboard".equals(servletPath)) {
+            handleBranchOrderStatusUpdate(request, response, session, latestUser);
+            return;
+        }
+
+        if (!userDAO.isCompanyOwner(latestUser) || !"/company/dashboard".equals(servletPath)) {
             response.sendRedirect(request.getContextPath() + "/shop");
             return;
         }
@@ -92,6 +99,7 @@ public class BusinessDashboardServlet extends HttpServlet {
                 return;
             }
             request.setAttribute("companySummary", BusinessReportDAO.companySummary(getServletContext()));
+            request.setAttribute("categoryStats", BusinessReportDAO.categoryStats(getServletContext()));
             request.setAttribute("branchStats", BusinessReportDAO.branchStats(getServletContext()));
             request.setAttribute("dashboardError", session.getAttribute("dashboardError"));
             request.setAttribute("dashboardSuccess", session.getAttribute("dashboardSuccess"));
@@ -128,7 +136,74 @@ public class BusinessDashboardServlet extends HttpServlet {
         List<OrderStore.Order> orders = OrderStoreDAO.findByBranchId(getServletContext(), branchStat.getBranchId(), 20);
         request.setAttribute("branchStat", branchStat);
         request.setAttribute("orders", orders);
+        request.setAttribute(
+                "pendingOrderCount",
+                OrderStoreDAO.countByBranchAndStatus(
+                        getServletContext(),
+                        branchStat.getBranchId(),
+                        OrderStore.OrderStatus.CHO_XAC_NHAN));
+        request.setAttribute("branchSuccess", session.getAttribute("branchSuccess"));
+        request.setAttribute("branchError", session.getAttribute("branchError"));
+        session.removeAttribute("branchSuccess");
+        session.removeAttribute("branchError");
         request.getRequestDispatcher("/branch-dashboard.jsp").forward(request, response);
+    }
+
+    private void handleBranchOrderStatusUpdate(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            HttpSession session,
+            User latestUser) throws IOException {
+        if (!userDAO.isBranchOwner(latestUser)) {
+            response.sendRedirect(request.getContextPath() + "/shop");
+            return;
+        }
+
+        String orderId = normalize(request.getParameter("orderId"));
+        String action = normalize(request.getParameter("action"));
+        if (orderId.isEmpty() || action.isEmpty()) {
+            session.setAttribute("branchError", "Yêu cầu cập nhật đơn hàng không hợp lệ.");
+            response.sendRedirect(request.getContextPath() + "/branch/dashboard");
+            return;
+        }
+
+        OrderStore.OrderStatus fromStatus;
+        OrderStore.OrderStatus toStatus;
+        String successMessage;
+        switch (action) {
+            case "confirm":
+                fromStatus = OrderStore.OrderStatus.CHO_XAC_NHAN;
+                toStatus = OrderStore.OrderStatus.DA_XAC_NHAN;
+                successMessage = "Đã xác nhận đơn hàng thành công.";
+                break;
+            case "ship":
+                fromStatus = OrderStore.OrderStatus.DA_XAC_NHAN;
+                toStatus = OrderStore.OrderStatus.DANG_GIAO;
+                successMessage = "Đơn hàng đã được chuyển sang trạng thái đang giao.";
+                break;
+            case "deliver":
+                fromStatus = OrderStore.OrderStatus.DANG_GIAO;
+                toStatus = OrderStore.OrderStatus.DA_GIAO;
+                successMessage = "Đã cập nhật đơn hàng giao thành công.";
+                break;
+            default:
+                session.setAttribute("branchError", "Thao tác cập nhật trạng thái không hợp lệ.");
+                response.sendRedirect(request.getContextPath() + "/branch/dashboard");
+                return;
+        }
+
+        boolean updated = OrderStoreDAO.updateStatusByBranch(
+                getServletContext(),
+                latestUser.getBranchId(),
+                orderId,
+                fromStatus,
+                toStatus);
+        if (updated) {
+            session.setAttribute("branchSuccess", successMessage);
+        } else {
+            session.setAttribute("branchError", "Không thể cập nhật đơn hàng. Vui lòng tải lại danh sách và thử lại.");
+        }
+        response.sendRedirect(request.getContextPath() + "/branch/dashboard");
     }
 
     private String normalize(String value) {

@@ -2,7 +2,6 @@ package com.btl_web.model;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,10 +10,6 @@ import java.util.Collections;
 import java.util.List;
 
 public final class ClothingStore {
-    private static final String DB_URL = System.getenv().getOrDefault("DB_URL",
-            "jdbc:postgresql://localhost:5432/btl_web");
-    private static final String DB_USER = System.getenv().getOrDefault("DB_USER", "postgres");
-    private static final String DB_PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "postgres");
     private static volatile boolean schemaInitialized = false;
 
     private ClothingStore() {
@@ -151,6 +146,25 @@ public final class ClothingStore {
         try (Connection connection = getConnection();
                 PreparedStatement statement = connection.prepareStatement(createTableSql)) {
             statement.executeUpdate();
+
+            String syncSql = "INSERT INTO clothing_product (product_code, name, category, size, color, price, stock_quantity) "
+                    + "SELECT id, name, group_name, size, color, price, stock_quantity FROM shop_product "
+                    + "ON CONFLICT (product_code) DO UPDATE SET "
+                    + "name = EXCLUDED.name, "
+                    + "category = EXCLUDED.category, "
+                    + "size = EXCLUDED.size, "
+                    + "color = EXCLUDED.color, "
+                    + "price = EXCLUDED.price, "
+                    + "stock_quantity = EXCLUDED.stock_quantity";
+            try (PreparedStatement syncStatement = connection.prepareStatement(syncSql)) {
+                syncStatement.executeUpdate();
+            }
+
+            String pruneSql = "DELETE FROM clothing_product cp "
+                    + "WHERE NOT EXISTS (SELECT 1 FROM shop_product sp WHERE sp.id = cp.product_code)";
+            try (PreparedStatement pruneStatement = connection.prepareStatement(pruneSql)) {
+                pruneStatement.executeUpdate();
+            }
             schemaInitialized = true;
         } catch (SQLException e) {
             throw new IllegalStateException("Không thể khởi tạo bảng clothing_product.", e);
@@ -158,7 +172,7 @@ public final class ClothingStore {
     }
 
     private static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        return DbSupport.getConnection();
     }
 
     public static final class ClothingItem {

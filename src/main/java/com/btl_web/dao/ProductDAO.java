@@ -23,29 +23,31 @@ public class ProductDAO {
     private volatile boolean schemaInitialized = false;
     public List<Product> all(ServletContext context) throws SQLException {
         initSchemaIfNeeded();
-    String sql = "SELECT id, name, group_name, segment, size, color, price, image "
+        String sql = "SELECT id, name, branch_id, group_name, segment, size, color, price "
                 + "FROM shop_product ORDER BY id";
         List<Product> products = new ArrayList<>();
-        Connection con = DbSupport.getConnection();
-        PreparedStatement statement = con.prepareStatement(sql);
-        ResultSet resultSet = statement.executeQuery();
-        while (resultSet.next()) {
-            products.add(new Product(
-                    resultSet.getString("id"),
-                    resultSet.getString("name"),
-                    resultSet.getString("group_name"),
-                    resultSet.getString("segment"),
-                    resultSet.getString("size"),
-                    resultSet.getString("color"),
-                    resultSet.getBigDecimal("price"),
-                    resultSet.getString("image")));
+        try (Connection con = DbSupport.getConnection();
+             PreparedStatement statement = con.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                products.add(new Product(
+                        resultSet.getString("id"),
+                        resultSet.getString("name"),
+                    resultSet.getString("branch_id"),
+                        resultSet.getString("group_name"),
+                        resultSet.getString("segment"),
+                        resultSet.getString("size"),
+                        resultSet.getString("color"),
+                        resultSet.getBigDecimal("price"),
+                        null));
+            }
+            return Collections.unmodifiableList(products);
         }
-        return Collections.unmodifiableList(products);
     }
 
     public Product findById(ServletContext context, String id) throws SQLException {
         initSchemaIfNeeded();
-        String sql = "SELECT id, name, group_name, segment, size, color, price, image "
+        String sql = "SELECT id, name, branch_id, group_name, segment, size, color, price "
                 + "FROM shop_product WHERE id = ?";
         try (Connection connection = DbSupport.getConnection(); 
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -57,12 +59,13 @@ public class ProductDAO {
                 return new Product(
                         resultSet.getString("id"),
                         resultSet.getString("name"),
+                    resultSet.getString("branch_id"),
                         resultSet.getString("group_name"),
                         resultSet.getString("segment"),
                         resultSet.getString("size"),
                         resultSet.getString("color"),
                         resultSet.getBigDecimal("price"),
-                        resultSet.getString("image"));
+                        null);
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Không thể tìm sản phẩm theo mã từ CSDL.", e);
@@ -81,16 +84,17 @@ public class ProductDAO {
         String createTableSql = "CREATE TABLE IF NOT EXISTS shop_product ("
                 + "id TEXT PRIMARY KEY,"
                 + "name TEXT NOT NULL,"
+            + "branch_id TEXT,"
                 + "group_name TEXT NOT NULL,"
                 + "segment TEXT NOT NULL,"
                 + "size TEXT NOT NULL,"
                 + "color TEXT NOT NULL,"
-                + "price NUMERIC(14, 2) NOT NULL,"
-                + "image TEXT)";
+                + "price NUMERIC(14, 2) NOT NULL)";
 
-        Connection connection = DbSupport.getConnection();
-        PreparedStatement statement = connection.prepareStatement(createTableSql);
-        statement.executeUpdate();
-        schemaInitialized = true;
+        try (Connection connection = DbSupport.getConnection();
+             PreparedStatement statement = connection.prepareStatement(createTableSql)) {
+            statement.executeUpdate();
+            schemaInitialized = true;
+        }
     }
 }
